@@ -11,7 +11,7 @@ Itqan is a Claude Code plugin for spec-driven product building. It takes a produ
 | Intake | `docs/input/` | The BRD and/or Vision, classified, with conflicts ruled on |
 | 0 Constitution | `docs/00-constitution.md` | Principles, quality bar, constraints, agent boundaries |
 | 1 Product Spec | `docs/01-product-spec.md` | Features, stories, EARS acceptance criteria with examples, measurable NFRs |
-| 2 UX Spec | `docs/02-ux/` | Researched design system, tokens, screens with data, actions and four states, wireframes |
+| 2 UX Spec | `docs/02-ux/` | Researched design system, an art-directed visual direction, tokens, screens with data, actions and four states, high-fidelity mockups critiqued by a design-critic agent |
 | 3 Technical Design | `docs/03-tech/` | Stack (pinned), components, OpenAPI contract, data model, ADRs |
 | 4 Implementation Plan | `docs/04-plan.md` | Ordered vertical-slice tasks covering every criterion |
 | 5 Build | `app/` | Test-first, one task per subagent, reviewed after each |
@@ -65,6 +65,9 @@ Itqan's stage instructions combine its own formats with vetted material, pinned 
 - **Spec Kit** (GitHub, MIT): the clarify taxonomy and question format, the "unit tests for English" requirements self-check, analyze-style review passes, prioritised independent stories, the constitution check.
 - **Superpowers** (MIT): test-driven development, writing good tests and verification-before-completion, vendored verbatim; the implementer and task-reviewer patterns, adapted.
 - **Vercel Web Interface Guidelines** (MIT): vendored as the screen checklist.
+- **Anthropic frontend-design** (Apache-2.0): the art-direction process behind the UX Spec's visual direction (subject inventory, design plan, review against generic defaults, screenshot critique), vendored.
+- **Impeccable** (Apache-2.0): the craft floor and the Operate-mode rules for app screens, vendored (reference documents only).
+- **Emil Kowalski's break-ui** (MIT): the worst-case data pass in Acceptance (long names, counts of 0 and 1, empty and huge lists), vendored.
 - **Anthropic webapp-testing** (Apache-2.0): the reconnaissance-then-act approach behind `scripts/ui-scan.mjs`, which flags stray "null" or "undefined" text, phone-width overflow, console errors and accessibility violations on every screen.
 - **MADR** for decision records, **EARS** for requirements, the **W3C Design Tokens** format for tokens.
 

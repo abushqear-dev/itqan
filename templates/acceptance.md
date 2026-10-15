@@ -21,6 +21,11 @@ depends_on: docs/04-plan.md
 ## Non-functional requirements
 - NFR-01 PASS. Evidence: <measurement and how it was taken>
 
+## Design quality
+- UI scan: <PASS/FAIL per screen and role; attach the output>
+- Worst-case data pass: <findings by severity and what was fixed; Fragile items left as known gaps>
+- Design critique of built screens: <design-critic scores per dimension, final round; differences from the mockups>
+
 ## Browser and device matrix
 <Each browser/device from the Constitution: tested / not tested, with the reason.>
 

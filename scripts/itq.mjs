@@ -315,6 +315,16 @@ function checkStage(root, n) {
       catch { errors.push('tokens.json is not valid JSON.'); }
     }
     if (!/^##\s+Design system/mi.test(text)) errors.push('The UX Spec has no "## Design system" section.');
+    const direction = sectionBody(text, 'Visual direction');
+    if (!direction) errors.push('The UX Spec has no "## Visual direction" section.');
+    else {
+      if ((direction.match(/#[0-9a-f]{6}\b/gi) || []).length < 4) errors.push('The Visual direction names fewer than 4 palette colours as hex values.');
+      if (!/Type:/i.test(direction)) errors.push('The Visual direction has no "Type:" line (faces, roles and scale).');
+      if (!/Design critique:/i.test(direction)) errors.push('The Visual direction has no "Design critique:" line with the design-critic scores.');
+    }
+    if (listFiles(root, 'docs/02-ux/mockups', (f) => /\.(html?|png|jpe?g|webp)$/i.test(f)).length === 0) {
+      errors.push('No mockups in docs/02-ux/mockups/ (high-fidelity mockups of the P1 screens).');
+    }
   }
 
   if (n === '3') {

@@ -69,9 +69,11 @@ expect 0 "approve product spec" $Q approve 1
 expect 2 "inputs frozen after spec approval" gate docs/input/vision.md
 
 $Q start 2 >/dev/null; mkdir -p docs/02-ux
-printf -- '---\nid: ux-spec\n---\n# UX\n## Design system\nDecision: x\n### SCR-01 Tools\nServes AC-01.1, AC-01.2. Empty, Loading, Error, Success.\n' > docs/02-ux/ux-spec.md
-expect 1 "check 2 fails without tokens" $Q check 2
+printf -- '---\nid: ux-spec\n---\n# UX\n## Design system\nDecision: x\n## Visual direction\n- Palette: Ground #F6F7F2, Ink #1B2620, Accent #0A7A5A\n## Screens\n### SCR-01 Tools\nServes AC-01.1, AC-01.2. Empty, Loading, Error, Success.\n' > docs/02-ux/ux-spec.md
 cp "$ROOT/templates/tokens.json" docs/02-ux/tokens.json
+expect 1 "check 2 fails on a thin visual direction and no mockups" $Q check 2
+sed -i 's/^- Palette: .*/- Palette: Ground #F6F7F2, Ink #1B2620, Accent #0A7A5A, Error #B3261E\n- Type: Inter 16\/24, scale 1.2\n- Design critique: 4.4 \/ 5, PASS/' docs/02-ux/ux-spec.md
+mkdir -p docs/02-ux/mockups; echo "<html></html>" > docs/02-ux/mockups/SCR-01.html
 expect 0 "approve ux" $Q approve 2
 
 $Q start 3 >/dev/null; mkdir -p docs/03-tech/adr

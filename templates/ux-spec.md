@@ -15,6 +15,18 @@ depends_on: docs/01-product-spec.md
 **Decision:** <chosen system and layout, with the reason in 2-3 sentences. Tokens are in `tokens.json`.>
 **Conflicts with the Constitution:** <none, or the conflict raised as a question>
 
+## Visual direction
+- **Mode:** <Operate | Persuade | Read | Experience, per surface>
+- **Subject inventory:** <6-10 things from this product's world that the design draws on>
+- **Palette:** <4-6 named hex values with roles, e.g. "Ground #F6F7F2, Ink #1B2620, Accent #0A7A5A (actions only), Warning #B85C00, Error #B3261E">
+- **Type:** <faces and roles, the scale (sizes and line heights), why these faces>
+- **Layout concept:** <one sentence; the two alternatives sketched and why this one>
+- **Signature element:** <the one place the boldness is spent>
+- **Principles:** <3-5 short rules for this product's look>
+- **Default check:** <what in the first plan read as a generic default, and what replaced it>
+- **Contrast:** <each text/background pair with its ratio>
+- **Design critique:** <final design-critic scores per dimension, and any accepted gaps>
+
 ## Navigation
 <Information architecture: the screen map, as a Mermaid flowchart or a nested list.>
 
@@ -30,7 +42,7 @@ depends_on: docs/01-product-spec.md
   - Loading: <...>
   - Error: <message and recovery for each failure>
   - Success: <confirmation after each action>
-- **Wireframe:** <artifact link and the exported file in docs/02-ux/wireframes/>
+- **Mockup or wireframe:** <docs/02-ux/mockups/SCR-01.html for P1 screens, docs/02-ux/wireframes/ otherwise; artifact link if published>
 - **Accessibility notes:** <focus order, labels, contrast-sensitive items>
 
 ## Non-UI acceptance criteria

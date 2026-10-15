@@ -9,7 +9,16 @@ Itqan is MIT licensed. It includes or adapts material from these projects. Nothi
 - **vercel-labs/web-interface-guidelines** (MIT), commit `434b7f91364665f2f733b310ec54809bf8f37937`, https://github.com/vercel-labs/web-interface-guidelines
   - `vendor/web-interface-guidelines/guidelines.md`
 
+- **anthropics/skills** `frontend-design` (Apache-2.0), commit `dbd4588f9e1033efb41dad4bef2f7947c8993d44`, https://github.com/anthropics/skills
+  - `vendor/frontend-design/frontend-design.md`
+- **pbakaus/impeccable** (Apache-2.0), commit `8a0e198da34ebc5b936a9d5975fb7a3b1cf353b7`, https://github.com/pbakaus/impeccable
+  - `vendor/impeccable/craft-floor.md`, `operate.md` (reference documents only; the launcher and hook are not included)
+- **emilkowalski/skills** `break-ui` (MIT), commit `2d228630ba1446365f614a108cb8252f1feda202`, https://github.com/emilkowalski/skills
+  - `vendor/break-ui/break-ui.md`, `CATALOG.md`
+
 ## Adapted (rewritten for Itqan's formats, IDs and gates)
+
+- **pbakaus/impeccable** (Apache-2.0): surface modes (Operate, Persuade, Read, Experience) -> `skills/ux-spec/SKILL.md`
 
 - **github/spec-kit** (MIT), commit `3238fa9285694dc539aeb9829b337bfd6aed7317`, https://github.com/github/spec-kit
   - `clarify` command: ambiguity taxonomy and question format -> `skills/product-spec/clarify.md`

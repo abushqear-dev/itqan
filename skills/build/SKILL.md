@@ -25,6 +25,12 @@ Read `.itqan/build-log.md`. Continue with the first task in plan order that has 
 - When budget or turns are tight, implement in the main session instead, but keep steps 1-6 for every task. Never batch several tasks into one review or one commit, and never skip the review to save budget.
 - Every three tasks, or before the session ends, run the full test suite and a code review (`/code-review` or a reviewer subagent) on the work since the last one; fix real issues only.
 
+## UI tasks
+- Build each screen to match its mockup in `docs/02-ux/mockups/` (or wireframe), using only the tokens in `docs/02-ux/tokens.json` and the components of the chosen design system.
+- Before any UI edit, read `${CLAUDE_PLUGIN_ROOT}/vendor/impeccable/craft-floor.md` (the quality floor and patterns to refuse), and for app screens `${CLAUDE_PLUGIN_ROOT}/vendor/impeccable/operate.md`. Follow the build, CSS and copy guidance in `${CLAUDE_PLUGIN_ROOT}/vendor/frontend-design/frontend-design.md`.
+- Implement every state the SCR block names (empty, loading, error, success, hover, focus, disabled), all form errors at once, correct plurals and locale formatting for numbers and dates, and the theming of browser surfaces (focus ring, selection, numerals).
+- When the task finishes a screen, screenshot it at 1440 and 390 px and compare with the mockup; fix visible differences that are not improvements before the review.
+
 ## Running out of budget or turns
 Stop after the current task's step 6, not in the middle of one. Report which tasks are done and which remain. The next session resumes from the build log. Do not rush or merge tasks to finish in one session.
 

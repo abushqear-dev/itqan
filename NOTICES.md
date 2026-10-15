@@ -36,4 +36,10 @@ Itqan is MIT licensed. It includes or adapts material from these projects. Nothi
 - **adr/madr** (MIT OR CC0-1.0), https://github.com/adr/madr
   - ADR structure -> `templates/adr.md`
 - **EARS** (Mavin et al., Rolls-Royce, IEEE RE 2009): requirement sentence patterns used in the Product Spec.
+- **WCAG 2.x** (W3C): the relative-luminance contrast formula `itq.mjs` uses to recompute every stated contrast ratio.
+- **Redocly CLI** (MIT), version 1.25.0, https://github.com/Redocly/redocly-cli: run through `npx` by the Technical Design check to lint `api.yaml`. Not bundled.
+
+## Itqan's own work
+
+The product-completeness review pass, the lifecycle table, scope-cut tagging, review cards, the copy deck, the data-ranges table, the `explorer` agent and the build checks (tests run from `.itqan/commands.json`, criterion ids counted only in test titles, one commit per task) are written for Itqan and copy no external text.
 - **W3C Design Tokens Format Module 2025.10**: `templates/tokens.json` format.

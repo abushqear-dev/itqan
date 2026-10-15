@@ -14,7 +14,10 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Templates in `${CLAUDE_PLUG
 - **Run locally.** Exact commands, port and URL. Check the port is free on this machine if you can.
 - **Constitution check.** List every MUST principle and quality-bar item as PASS or FAIL with how the design meets it. A FAIL blocks approval: change the design, or raise it with the user as an upstream change to the Constitution. Do this before drafting the details and again at the end (adapted from Spec Kit's plan template, see NOTICES.md).
 - **Unknowns researched.** When a requirement depends on something you are not sure about (a library's limits, time-zone handling, a browser API), research it and record the answer with its source. Never guess silently.
+- **Values the spec did not set.** Never fill a product gap silently. List every limit, range or default you had to choose under "## Values the spec did not set"; anything that changes what users can do goes back upstream as a question. Check each against the UX Spec's "Data ranges" (a value outside the range breaks a screen).
+- **One line per screen** under "## Screen data", starting with the SCR id, covering every field in its "Shows" list.
+- **Messages by key.** The error model names the copy-deck key (MSG.*) for each error; it does not restate wording.
+- **Lint the contract:** `npx --yes @redocly/cli@1.25.0 lint docs/03-tech/api.yaml` (the check runs it when npx is available) and fix every error.
 - **Nothing speculative.** No "may later swap to X" justifications and no technology the requirements do not need.
-- Optional: if `npx` is available, lint the contract (`npx @redocly/cli lint docs/03-tech/api.yaml`) and fix errors.
 
 Gate: `itq.mjs check 3` passes (sections, pinned versions, OpenAPI with x-acceptance on every operation, data model, at least one ADR, every screen mapped), the review is clean, and the user approves the design and ADRs. The user reviews design.md and the ADRs, not the raw YAML.

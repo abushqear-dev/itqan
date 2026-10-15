@@ -34,7 +34,7 @@ Update: `claude plugin marketplace update itqan-plugins`, then `claude plugin up
 
 1. Make an empty folder for the product (or put your BRD or Vision in it) and start Claude Code there.
 2. Run `/itqan:start`. If no input exists, it asks for one: a file, a link or pasted text.
-3. Answer its questions, read each document's "Approve this if" box, and reply `approve` or ask for changes.
+3. Answer its questions, read each stage's review card (reading time, the decisions only you can make, assumptions and what they mean for users, what changed), and reply `approve` or ask for changes.
 4. Run `/itqan:start` again in a later session to resume. `/itqan:status` shows where you are.
 
 Optional: install the [Superpowers](https://github.com/obra/superpowers) plugin. The build stage uses its subagent-driven development and test-driven development skills when they are available.
@@ -44,20 +44,25 @@ Optional: install the [Superpowers](https://github.com/obra/superpowers) plugin.
 - **Formats Claude can't misread:** EARS acceptance criteria with examples, an OpenAPI 3.1 contract, an exact data model, W3C design tokens and MADR decision records.
 - **UX before the API**, so screens decide what data the system must provide.
 - **Gaps are asked about, not guessed.** `[NEEDS CLARIFICATION]` markers block approval.
+- **Product decisions stay yours.** Any assumption that drops a capability users would expect is tagged `scope-cut` and needs your own answer; "use defaults" never settles one. A lifecycle table makes every entity's create, view, edit, cancel and undo explicit, and the reviewer runs a product-completeness pass against comparable products.
+- **One source for every value and word:** a data-ranges table (min and max of everything a screen shows) and a copy deck (every message, by key) feed the design, the code and the tests.
 - **Ambiguity and edge cases are swept before building:**
   - a roles-and-permissions table;
   - an "Interpretations" list of phrases with more than one reading;
   - a required edge-case sweep (dates, quantities, permissions, state order, multiple users, notifications, undo), where each rule becomes a testable criterion.
 - **The build survives budget limits.** Every task is test-first, reviewed and committed on its own, and an interrupted build resumes from `.itqan/build-log.md`.
-- **Automated checks per stage** (`itq.mjs check <n>`):
-  - every criterion is written in EARS;
-  - every screen has all four states;
-  - every screen is mapped to the API;
-  - every criterion is covered by a task and named by a test;
-  - every PASS has evidence.
+- **Automated checks per stage** (`itq.mjs check <n>`) test truth, not just presence:
+  - every criterion is written in EARS, and every lifecycle cell is filled;
+  - every screen has all four states, every P1 screen has a mockup plus a state or role variant, and every stated contrast ratio is recomputed;
+  - every screen has its own data line, and the OpenAPI contract passes a pinned lint;
+  - every task's verify step is a real command that selects its criterion tests;
+  - the build check runs the install and test commands itself, fails on any skipped test, counts criterion ids only in test titles, and requires one reviewed commit per task;
+  - every PASS names a test that exists.
+- **Review cards** (`itq.mjs card <n>`) put the decisions, assumptions and changes on one screen before each approval.
+- **Black-box exploratory testing:** an explorer agent uses the running app like a demanding user of each role, without reading the code.
 - **Generated traceability** runs from each criterion to its screens, API operations, tasks and tests (`.itqan/TRACE.md`).
-- **Independent reviewers:** a document reviewer, a design researcher, and a spec-compliance reviewer per build task.
-- **A hook enforces the order:** no stage before the previous one is approved, no edits to approved stages, no hand edits to generated state.
+- **Independent reviewers:** a document reviewer, a design researcher, a design critic, a spec-compliance reviewer per build task and the explorer.
+- **Hooks enforce the order** for file edits and for Bash or PowerShell writes alike: no stage before the previous one is approved, no edits to approved stages, no hand edits to generated state.
 
 ## Built on proven sources
 
@@ -76,7 +81,8 @@ Itqan's stage instructions combine its own formats with vetted material, pinned 
 ```
 docs/input/  docs/00-constitution.md  docs/01-product-spec.md
 docs/02-ux/  docs/03-tech/  docs/04-plan.md  docs/05-acceptance.md
-.itqan/      state.json, STATUS.md, TRACE.md (generated), ASSUMPTIONS.md, build-log.md
+.itqan/      state.json, STATUS.md, TRACE.md, cards/, approved/ (generated),
+             ASSUMPTIONS.md, build-log.md, commands.json
 app/         the product, with app/CLAUDE.md
 ```
 

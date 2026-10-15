@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Itqan state tool: project state, automated quality checks, generated traceability and hook handlers.
 // No dependencies. Usage: node itq.mjs <command> [args]
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -180,6 +181,72 @@ const TEXT_FILE = /\.(m?[jt]sx?|cjs|py|rb|go|rs|java|kt|cs|php|swift|feature|md)
 const testFiles = (root) => listFiles(root, 'app', (f) => TEST_FILE.test(f.split(path.sep).join('/')) && TEXT_FILE.test(f));
 const stageFiles = (root, n) => STAGES[n].paths.flatMap((p) => (p.endsWith('/') ? listFiles(root, p.slice(0, -1)) : exists(root, p) ? [p] : []));
 const readAll = (root, files) => files.map((f) => read(root, f) || '').join('\n');
+const hasSection = (text, heading) => new RegExp(`^##\\s+${heading}`, 'mi').test(text || '');
+const acPattern = (id) => new RegExp(`\\b${id.replace('.', '\\.')}\\b`);
+
+// Data rows of every markdown table in `text`, as arrays of trimmed cells. Header and separator rows are dropped.
+function tableRows(text) {
+  const separator = /^\s*\|[\s:|-]+\|\s*$/;
+  const lines = (text || '').split(/\r?\n/);
+  const rows = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\s*\|/.test(lines[i]) || separator.test(lines[i]) || separator.test(lines[i + 1] || '')) continue;
+    rows.push(lines[i].trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim()));
+  }
+  return rows;
+}
+
+// Test titles: string literals passed to test(), it() or describe(), and Python test function names
+// (test_ac_01_2_x is read as AC-01.2). Criterion IDs count only when they appear in a title.
+function testTitles(text) {
+  const titles = [];
+  for (const m of (text || '').matchAll(/\b(?:test|it|describe)(?:\.(?:describe|only|skip|each\([^)]*\)))?\s*\(\s*(['"`])((?:\\.|(?!\1)[^\\])*)\1/g)) titles.push(m[2]);
+  for (const m of (text || '').matchAll(/\bdef\s+(test_\w+)/g)) titles.push(m[1].replace(/ac_(\d+)_(\d+)/gi, 'AC-$1.$2'));
+  return titles;
+}
+
+// WCAG 2.x relative luminance and contrast ratio of two #rrggbb colours.
+function luminance(hex) {
+  const [r, g, b] = hex.replace('#', '').match(/[0-9a-f]{2}/gi).map((h) => {
+    const c = parseInt(h, 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(a, b) {
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+// Runs a shell command; returns { code, output } with stdout and stderr combined.
+function run(command, cwd, timeout = 600000) {
+  const result = spawnSync(command, { cwd, shell: true, encoding: 'utf8', timeout, maxBuffer: 64 * 1024 * 1024 });
+  const output = `${result.stdout || ''}${result.stderr || ''}${result.error ? result.error.message : ''}`;
+  return { code: result.error ? -1 : result.status, output: output.replace(/\x1b\[[0-9;]*m/g, '') };
+}
+
+// The acceptance-report line that gives `id` a PASS or FAIL verdict ('' if none).
+function verdictLine(lines, id) {
+  return lines.find((l) => acPattern(id).test(l) && /\b(PASS|FAIL)\b/.test(l)) || '';
+}
+
+const lastLines = (output, n = 12) => output.trim().split(/\r?\n/).slice(-n).join('\n    ');
+
+// Rows of .itqan/ASSUMPTIONS.md (ID | Stage | Assumption | Consequence | Tag | Status), skipping placeholder rows.
+function assumptions(root) {
+  const plain = (cell) => (cell || '').replace(/`/g, '').trim();
+  return tableRows(read(root, `${STATE_DIR}/ASSUMPTIONS.md`))
+    .filter((row) => /^A-\d+$/.test(plain(row[0])))
+    .map((row) => ({
+      id: plain(row[0]),
+      stage: plain(row[1]),
+      text: plain(row[2]),
+      consequence: plain(row[3]),
+      scopeCut: row.some((c) => /^scope-cut$/i.test(plain(c))),
+      status: plain(row[row.length - 1]).toLowerCase(),
+    }));
+}
 
 // The specification's own IDs, used by several checks.
 function specModel(root) {
@@ -207,15 +274,26 @@ function apiOperations(root) {
   return ops;
 }
 
-// Task progress lives in .itqan/build-log.md (the plan is locked once approved): lines like "T-002 done abc123".
-function doneTasks(root) {
+// Task progress lives in .itqan/build-log.md (the plan is locked once approved). Per task, in order:
+// "T-002 verify: <command> -> <result>", "T-002 reviewed COMPLIANT", "T-002 done <commit hash>".
+function buildLog(root) {
   const log = read(root, `${STATE_DIR}/build-log.md`) || '';
-  return new Set((log.match(/^\s*[-*]?\s*(T-\d{3})\s+done\b/gim) || []).map((l) => l.match(/T-\d{3}/)[0]));
+  const entries = {};
+  for (const line of log.split(/\r?\n/)) {
+    const m = line.match(/^\s*[-*]?\s*(T-\d{3})\s+(verify|reviewed|done)\b:?\s*(.*)$/i);
+    if (!m) continue;
+    const entry = (entries[m[1]] ||= {});
+    const kind = m[2].toLowerCase();
+    if (kind === 'verify' && /->/.test(m[3])) entry.verify = m[3];
+    if (kind === 'reviewed' && /^COMPLIANT\b/.test(m[3])) entry.reviewed = true;
+    if (kind === 'done') { entry.done = true; entry.hash = (m[3].match(/^[0-9a-f]{7,40}\b/i) || [])[0]; }
+  }
+  return entries;
 }
 
 // Tasks in the plan with their fields.
 function planTasks(root) {
-  const done = doneTasks(root);
+  const log = buildLog(root);
   const blocks = headingBlocks(read(root, STAGES[4].doc), 'T-');
   return ids(blocks).map((id) => {
     const block = blocks[id];
@@ -226,8 +304,12 @@ function planTasks(root) {
       covers: field('Covers').match(/AC-\d+\.\d+/g) || [],
       stories: [...new Set((field('Covers').match(/AC-(\d+)\.\d+/g) || []).map((ac) => `US-${ac.match(/AC-(\d+)/)[1]}`))],
       depends: field('Depends').match(/T-\d{3}/g) || [],
+      title: (block.split(/\r?\n/)[0].match(/T-\d{3}\s*(?:\[P\])?\s*(.*)$/) || [])[1] || '',
+      verify: field('Verify'),
+      testFirst: field('Test first'),
       hasVerify: field('Verify') !== '',
-      done: done.has(id),
+      log: log[id] || {},
+      done: Boolean(log[id]?.done),
     };
   });
 }
@@ -258,6 +340,11 @@ function checkStage(root, n) {
     for (const tier of ['Always', 'Ask first', 'Never']) {
       if (!new RegExp(`\\b${tier}\\b`).test(c)) errors.push(`Constitution boundaries are missing the "${tier}" tier.`);
     }
+    const principles = sectionBody(c, 'Principles').split(/\r?\n/).filter((l) => /^\s*\d+\.\s/.test(l) && /\b(MUST|SHOULD)\b/.test(l));
+    if (principles.length < 3) errors.push(`The Constitution has ${principles.length} numbered MUST/SHOULD principle(s); write 3 to 5.`);
+    for (const p of principles) if (!/Reason:/i.test(p)) errors.push(`Principle "${p.trim().slice(0, 50)}" has no "Reason:".`);
+    const performance = (sectionBody(c, 'Quality bar').match(/^.*Performance.*$/im) || [''])[0];
+    if (!/\d/.test(performance.replace(/<[^>]*>/g, ''))) errors.push('The quality bar has no Performance target with a number and unit (e.g. "p95 page load < 2 s").');
   }
 
   if (n === '1') {
@@ -267,8 +354,29 @@ function checkStage(root, n) {
       if (!/Priority:\s*(P[1-3]|proposed)\b/i.test(block)) errors.push(`${id} has no "Priority: P1|P2|P3|proposed" line.`);
       if (!/Independent test:/i.test(block)) errors.push(`${id} has no "Independent test:" line.`);
     }
-    for (const section of ['Clarifications', 'Roles and permissions', 'Interpretations', 'Edge cases']) {
-      if (!new RegExp(`^##\\s+${section}`, 'mi').test(model.spec || '')) errors.push(`The Product Spec is missing the "## ${section}" section.`);
+    for (const section of ['Goals and success measures', 'Clarifications', 'Roles and permissions', 'Lifecycle', 'Interpretations', 'Edge cases']) {
+      if (!hasSection(model.spec, section)) errors.push(`The Product Spec is missing the "## ${section}" section.`);
+    }
+    if (hasSection(model.spec, 'Goals and success measures') && !/\d/.test(sectionBody(model.spec, 'Goals and success measures').replace(/<[^>]*>/g, ''))) {
+      errors.push('Goals and success measures has no measurable target (a number).');
+    }
+    const lifecycle = tableRows(sectionBody(model.spec, 'Lifecycle')).filter((row) => !row[0].startsWith('<'));
+    if (hasSection(model.spec, 'Lifecycle') && lifecycle.length === 0) errors.push('The Lifecycle section has no rows (one per entity and per role or status).');
+    for (const row of lifecycle) {
+      if (row.some((cell) => cell === '')) errors.push(`Lifecycle row "${row[0]}" has an empty cell. Write an AC id, "proposed (US-n)" or "out of scope (confirmed by user)".`);
+      if (row.slice(1).some((cell) => /out of scope/i.test(cell) && !/confirmed/i.test(cell))) {
+        errors.push(`Lifecycle row "${row[0]}" marks an action out of scope without the user's confirmation. Ask the user, or keep it as a proposed story.`);
+      }
+    }
+    for (const a of assumptions(root)) {
+      if (a.scopeCut && !['confirmed', 'replaced'].includes(a.status)) {
+        errors.push(`${a.id} is a scope-cut with status "${a.status}". Only the user can settle it (confirmed or replaced); otherwise keep the capability as a P2 story.`);
+      }
+    }
+    const acsByStory = {};
+    for (const id of acIds) (acsByStory[id.match(/AC-(\d+)/)[1]] ||= []).push(Number(id.match(/\.(\d+)$/)[1]));
+    for (const [story, numbers] of Object.entries(acsByStory)) {
+      if (numbers.some((num, i) => num !== i + 1)) warnings.push(`The criteria of US-${story} are not numbered 1, 2, 3... in order of appearance (${numbers.join(', ')}).`);
     }
     const edgeSection = sectionBody(model.spec, 'Edge cases');
     for (const category of ['Dates and times', 'Quantities and text', 'Permissions', 'State changes', 'Multiple users', 'Notifications', 'Undo and recovery']) {
@@ -322,8 +430,26 @@ function checkStage(root, n) {
       if (!/Type:/i.test(direction)) errors.push('The Visual direction has no "Type:" line (faces, roles and scale).');
       if (!/Design critique:/i.test(direction)) errors.push('The Visual direction has no "Design critique:" line with the design-critic scores.');
     }
-    if (listFiles(root, 'docs/02-ux/mockups', (f) => /\.(html?|png|jpe?g|webp)$/i.test(f)).length === 0) {
-      errors.push('No mockups in docs/02-ux/mockups/ (high-fidelity mockups of the P1 screens).');
+    const mockups = listFiles(root, 'docs/02-ux/mockups', (f) => /\.html?$/i.test(f)).map((f) => path.basename(f));
+    if (mockups.length === 0) errors.push('No mockups in docs/02-ux/mockups/ (high-fidelity HTML mockups of the P1 screens).');
+    const p1Stories = new Set(ids(model.stories).filter((id) => /Priority:\s*P1\b/i.test(model.stories[id])).map((id) => id.match(/\d+/)[0]));
+    for (const id of ids(screens)) {
+      const servesP1 = [...refsIn(screens[id])].some((ref) => ref.startsWith('AC-') && p1Stories.has(ref.match(/AC-(\d+)/)[1]));
+      if (!servesP1) continue;
+      if (!mockups.some((m) => new RegExp(`^${id}\\.html?$`, 'i').test(m))) errors.push(`${id} serves a P1 criterion but has no mockup docs/02-ux/mockups/${id}.html.`);
+      if (!mockups.some((m) => m.startsWith(`${id}-`))) errors.push(`${id} has no variant mockup (${id}-empty.html, ${id}-error.html or ${id}-<role>.html).`);
+    }
+    const ranges = tableRows(sectionBody(text, 'Data ranges')).filter((row) => !row[0].startsWith('<'));
+    if (ranges.length === 0) errors.push('The UX Spec has no "## Data ranges" table rows (min and max of every value a screen renders).');
+    const copy = read(root, 'docs/02-ux/copy.md');
+    if (!copy || !/\bMSG\.[\w.-]+/.test(copy)) errors.push('docs/02-ux/copy.md does not exist or defines no MSG.* keys (the copy deck).');
+    const contrasts = [...text.matchAll(/Contrast:\s*(#[0-9a-f]{6})\s+on\s+(#[0-9a-f]{6})\s*=\s*(\d+(?:\.\d+)?)(?::1)?\s*(large)?/gi)];
+    if (contrasts.length === 0) errors.push('The Visual direction has no "Contrast: #text on #background = ratio" lines.');
+    for (const [, fg, bg, stated, large] of contrasts) {
+      const actual = contrastRatio(fg, bg);
+      const minimum = large ? 3 : 4.5;
+      if (actual < minimum) errors.push(`Contrast ${fg} on ${bg} is ${actual.toFixed(2)}:1, below the ${minimum}:1 minimum${large ? ' for large text' : ''}.`);
+      if (Math.abs(actual - Number(stated)) > 0.2) errors.push(`Contrast ${fg} on ${bg} is stated as ${stated} but computes to ${actual.toFixed(2)}.`);
     }
   }
 
@@ -332,8 +458,8 @@ function checkStage(root, n) {
     if (/\bFAIL\b/.test(sectionBody(design, 'Constitution check'))) {
       errors.push('The Constitution check has a FAIL. Fix the design or raise it with the user as an upstream change.');
     }
-    for (const section of ['Constitution check', 'Stack', 'Components', 'Run locally']) {
-      if (!new RegExp(`^##\\s+${section}`, 'mi').test(design)) errors.push(`design.md is missing the "## ${section}" section.`);
+    for (const section of ['Constitution check', 'Values the spec did not set', 'Stack', 'Components', 'Screen data', 'Run locally']) {
+      if (!hasSection(design, section)) errors.push(`design.md is missing the "## ${section}" section.`);
     }
     if (/^##\s+Stack/mi.test(design) && !/\d+\.\d+/.test(sectionBody(design, 'Stack'))) {
       errors.push('The Stack section pins no versions (e.g. "Node 24.1").');
@@ -346,6 +472,14 @@ function checkStage(root, n) {
       const ops = apiOperations(root);
       if (ops.length === 0) errors.push('api.yaml defines no operationId.');
       for (const op of ops) if (op.acs.length === 0) errors.push(`Operation ${op.id} has no "x-acceptance" list.`);
+      if (!process.env.ITQAN_NO_LINT) {
+        const lint = run('npx --yes @redocly/cli@1.25.0 lint docs/03-tech/api.yaml', root, 300000);
+        if (/npm (ERR!|error)|not recognized|command not found|ENOENT|ETIMEDOUT|ENOTFOUND|ECONNRESET/i.test(lint.output) && !/validat/i.test(lint.output)) {
+          warnings.push(`Could not run the OpenAPI lint (npx @redocly/cli@1.25.0): ${lastLines(lint.output, 2)}`);
+        } else if (lint.code !== 0) {
+          errors.push(`The OpenAPI lint failed (npx @redocly/cli@1.25.0 lint docs/03-tech/api.yaml):\n    ${lastLines(lint.output)}`);
+        }
+      }
     }
     if (!/No persistent data/i.test(design) && listFiles(root, 'docs/03-tech', (f) => /data-model\./.test(f)).length === 0) {
       errors.push('No data-model file in docs/03-tech (or say "No persistent data" in design.md).');
@@ -353,7 +487,10 @@ function checkStage(root, n) {
     if (listFiles(root, 'docs/03-tech/adr', (f) => /\d{4}-.*\.md$/.test(f)).length === 0) errors.push('No ADR in docs/03-tech/adr/ (NNNN-title.md).');
     const ux = readAll(root, stageFiles(root, '2'));
     const referenced = refsIn(text);
-    for (const id of ids(headingBlocks(ux, 'SCR-'))) if (!referenced.has(id)) errors.push(`${id} has no data mapping in the Technical Design ("## Screen data").`);
+    const screenData = sectionBody(design, 'Screen data').split(/\r?\n/);
+    for (const id of ids(headingBlocks(ux, 'SCR-'))) {
+      if (!screenData.some((line) => new RegExp(`^\\s*[-*|#]*\\s*\\**${id}\\b`).test(line))) errors.push(`${id} has no line of its own in "## Screen data" (one line per screen: every field and the operation that supplies it).`);
+    }
     for (const id of acIds) if (!referenced.has(id)) warnings.push(`${id} is not referenced in the Technical Design (fine if it is purely client-side).`);
   }
 
@@ -367,6 +504,12 @@ function checkStage(root, n) {
       if (!/^\s*[-*]?\s*\**Depends\**:/mi.test(t.block)) errors.push(`${t.id} has no "Depends:" line.`);
       for (const d of t.depends) if (!taskIds.has(d)) errors.push(`${t.id} depends on ${d}, which does not exist.`);
       if (t.stories.length > 1) warnings.push(`${t.id} covers more than one story (${t.stories.join(', ')}); consider splitting it.`);
+      if (!t.hasVerify) continue;
+      if (!/`[^`]+`\s*->\s*\S/.test(t.verify)) errors.push(`${t.id} Verify must be a backticked command, then "->" and the expected result (a count or test names).`);
+      if (/\b(manual(ly)?|visually|by hand|open the browser|eyeball)\b/i.test(t.verify)) errors.push(`${t.id} Verify is manual. Use a command that runs the tests for this task.`);
+      if (/node\s+--test\s+[^\s`'"]*\/(?=[\s`]|$)/.test(t.verify)) errors.push(`${t.id} Verify passes a bare directory to "node --test", which fails; pass a quoted glob such as 'tests/**/*.test.js'.`);
+      const missing = t.covers.filter((ac) => !acPattern(ac).test(`${t.verify} ${t.testFirst}`));
+      if (missing.length) errors.push(`${t.id} Verify or Test first does not name ${missing.join(', ')}; the verify step must select this task's criterion tests.`);
     }
     const first = tasks.find((t) => t.id === 'T-001');
     if (!first) errors.push('There is no T-001.');
@@ -388,22 +531,56 @@ function checkStage(root, n) {
   }
 
   if (n === '5') {
-    for (const t of planTasks(root)) if (!t.done) errors.push(`${t.id} is not marked done in .itqan/build-log.md.`);
-    const tests = readAll(root, testFiles(root));
-    if (testFiles(root).length === 0) errors.push('No test files found under app/.');
+    const tasks = planTasks(root);
+    const hashes = new Map();
+    for (const t of tasks) {
+      if (!t.log.verify) errors.push(`${t.id} has no "${t.id} verify: <command> -> <result>" line in .itqan/build-log.md.`);
+      if (!t.log.reviewed) errors.push(`${t.id} has no "${t.id} reviewed COMPLIANT" line in .itqan/build-log.md.`);
+      if (!t.done) { errors.push(`${t.id} is not marked done in .itqan/build-log.md.`); continue; }
+      if (!t.log.hash) { errors.push(`${t.id} done line has no commit hash ("${t.id} done <hash>").`); continue; }
+      if (hashes.has(t.log.hash)) errors.push(`${t.id} and ${hashes.get(t.log.hash)} name the same commit ${t.log.hash}; commit each task on its own.`);
+      hashes.set(t.log.hash, t.id);
+      const subject = ['.', 'app'].map((dir) => run(`git log -1 --format=%s ${t.log.hash}`, abs(root, dir), 30000)).find((r) => r.code === 0);
+      if (!subject) errors.push(`${t.id} commit ${t.log.hash} does not exist in the repository.`);
+      else if (!subject.output.includes(t.id)) errors.push(`${t.id} commit ${t.log.hash} has a subject without "${t.id}": ${subject.output.trim()}`);
+    }
+    const files = testFiles(root);
+    if (files.length === 0) errors.push('No test files found under app/.');
     if (!exists(root, 'app/README.md')) errors.push('app/README.md does not exist (human run instructions; see templates/app-README.md).');
     if (!exists(root, 'app/CLAUDE.md')) errors.push('app/CLAUDE.md does not exist (agent context).');
-    for (const id of acIds) if (!new RegExp(`\\b${id.replace('.', '\\.')}\\b`).test(tests)) errors.push(`${id} has no test that names it.`);
+    const titles = files.flatMap((f) => testTitles(read(root, f))).join('\n');
+    for (const id of acIds) if (!acPattern(id).test(titles)) errors.push(`${id} is not named in any test title (test(), it(), describe() or a Python test_ac_ name).`);
+    let commandsFile = null;
+    try { commandsFile = JSON.parse(read(root, `${STATE_DIR}/commands.json`)); } catch { /* reported below */ }
+    if (!commandsFile?.install || !commandsFile?.test) errors.push('.itqan/commands.json is missing or has no "install" and "test" commands (written by T-001).');
+    else if (!process.env.ITQAN_NO_RUN) {
+      for (const step of ['install', 'test']) {
+        const result = run(commandsFile[step], abs(root, 'app'));
+        if (result.code !== 0) { errors.push(`"${commandsFile[step]}" (${step}, run in app/) exited with ${result.code}:\n    ${lastLines(result.output)}`); break; }
+        const skipped = result.output.match(/(?:#\s*(?:skip(?:ped)?|todo)\s+([1-9]\d*))|(?:\b([1-9]\d*)\s+(?:skipped|pending|todo)\b)/i);
+        if (step === 'test' && skipped) errors.push(`The test run reports skipped or pending tests ("${skipped[0].trim()}"). Every test must run.`);
+      }
+    }
   }
 
   if (n === '6') {
     const report = read(root, doc) || '';
     const lines = report.split(/\r?\n/);
+    const titles = testFiles(root).flatMap((f) => testTitles(read(root, f))).filter((t) => t.trim().length > 3);
     for (const id of acIds) {
-      const line = lines.find((l) => new RegExp(`\\b${id.replace('.', '\\.')}\\b`).test(l) && /\b(PASS|FAIL)\b/.test(l));
+      const line = verdictLine(lines, id);
       if (!line) { errors.push(`${id} has no PASS or FAIL line in the Acceptance Report.`); continue; }
-      if (/\bPASS\b/.test(line) && !/Evidence/i.test(line)) errors.push(`${id} is PASS without "Evidence".`);
       if (/\bFAIL\b/.test(line) && !/Known gap/i.test(line)) errors.push(`${id} is FAIL without a "Known gap" note.`);
+      if (!/\bPASS\b/.test(line)) continue;
+      const evidence = line.split(/Evidence:?/i)[1];
+      if (evidence === undefined) { errors.push(`${id} is PASS without "Evidence".`); continue; }
+      const named = [...evidence.matchAll(/`([^`]+)`/g)].map((m) => m[1].trim()).filter((name) => name.length > 3);
+      if (!named.some((name) => titles.some((title) => title.includes(name) || name.includes(title)))) {
+        errors.push(`${id} PASS evidence names no existing test. Quote the test title in backticks, as it appears in the test file.`);
+      }
+    }
+    for (const id of ids(model.nfrs)) {
+      if (!verdictLine(lines, id)) errors.push(`${id} has no PASS or FAIL line with its measurement.`);
     }
     const trace = buildTrace(root);
     for (const e of trace.errors) errors.push(`Trace: ${e}`);
@@ -425,7 +602,10 @@ function buildTrace(root) {
   const adrs = new Set(listFiles(root, 'docs/03-tech/adr', (f) => /\d{4}-.*\.md$/.test(f)).map((f) => `ADR-${path.basename(f).slice(0, 4)}`));
   const tasks = planTasks(root);
   const ops = apiOperations(root);
-  const tests = testFiles(root).map((f) => ({ file: f, text: read(root, f) || '' }));
+  const tests = testFiles(root).map((f) => {
+    const text = read(root, f) || '';
+    return { file: f, text, titles: testTitles(text).join('\n') };
+  });
 
   const defined = {
     'FEAT-': model.spec ? new Set(ids(model.feats)) : null,
@@ -451,14 +631,14 @@ function buildTrace(root) {
   }
 
   const rows = ids(model.acs).sort(byId).map((ac) => {
-    const re = new RegExp(`\\b${ac.replace('.', '\\.')}\\b`);
+    const re = acPattern(ac);
     return {
       ac,
       story: `US-${ac.match(/AC-(\d+)/)[1]}`,
       screens: ids(screens).filter((s) => re.test(screens[s])),
       ops: ops.filter((o) => o.acs.includes(ac)).map((o) => o.id),
       tasks: tasks.filter((t) => t.covers.includes(ac)).map((t) => t.id),
-      tests: tests.filter((t) => re.test(t.text)).map((t) => t.file),
+      tests: tests.filter((t) => re.test(t.titles)).map((t) => t.file),
     };
   });
   for (const r of rows) {
@@ -490,6 +670,133 @@ function writeTrace(root, trace) {
   ].join('\n');
   fs.mkdirSync(abs(root, STATE_DIR), { recursive: true });
   fs.writeFileSync(abs(root, `${STATE_DIR}/TRACE.md`), text);
+}
+
+// ---------- review cards ----------
+
+const ID_FAMILIES = [['FEAT-', 'features'], ['US-', 'stories'], ['AC-', 'criteria'], ['NFR-', 'NFRs'], ['SCR-', 'screens'], ['C-', 'components'], ['ADR-', 'ADRs'], ['T-', 'tasks']];
+const definedIds = (text) => new Set(ID_FAMILIES.flatMap(([prefix]) => ids(headingBlocks(text, prefix))));
+const snapshotDir = (n) => `${STATE_DIR}/approved/stage-${n}`;
+
+// Copies a stage's documents at approval, so the next card can show what changed.
+function saveSnapshot(root, n) {
+  if (n === '5') return;
+  const dest = abs(root, snapshotDir(n));
+  fs.rmSync(dest, { recursive: true, force: true });
+  for (const f of stageFiles(root, n)) {
+    fs.mkdirSync(path.dirname(path.join(dest, f)), { recursive: true });
+    fs.copyFileSync(abs(root, f), path.join(dest, f));
+  }
+}
+
+function renderCard(root, state, n) {
+  const files = stageFiles(root, n).filter((f) => /\.(md|ya?ml|json)$/i.test(f));
+  const text = readAll(root, files);
+  const words = (text.match(/\S+/g) || []).length;
+  const counts = ID_FAMILIES.map(([prefix, label]) => [ids(headingBlocks(text, prefix)).length, label]).filter(([c]) => c > 0);
+  const { errors, warnings } = checkStage(root, n);
+  const stageName = STAGES[n].name.toLowerCase();
+  const mine = assumptions(root).filter((a) => new RegExp(`(^|\\D)${n}(\\D|$)`).test(a.stage) || a.stage.toLowerCase().includes(stageName));
+  const cuts = mine.filter((a) => a.scopeCut);
+  const proposed = sectionBody(read(root, STAGES[n].doc || ''), 'Proposed additions').split(/\r?\n/).filter((l) => /^\s*[-*\d]/.test(l));
+  const out = [
+    `# Review card: stage ${n}, ${STAGES[n].name}`,
+    '',
+    '<!-- Generated by itq.mjs card. Do not edit. -->',
+    '',
+    `Reading time: about ${Math.max(1, Math.round(words / 200))} min (${words} words in ${files.length} file(s)).${counts.length ? ` Defines ${counts.map(([c, l]) => `${c} ${l}`).join(', ')}.` : ''}`,
+    `Automated check: ${errors.length} error(s), ${warnings.length} warning(s).`,
+    '',
+    '## Decisions for you',
+    '',
+  ];
+  if (cuts.length) {
+    out.push(`Scope-cuts (each needs your own answer: confirm the cut, or keep the capability):`, '');
+    for (const a of cuts) out.push(`- **${a.id}** (${a.status}): ${a.text}. For users: ${a.consequence}`);
+    out.push('');
+  }
+  const others = mine.filter((a) => !a.scopeCut);
+  if (others.length) {
+    out.push('Assumptions made in this stage:', '');
+    for (const a of others) out.push(`- ${a.id} (${a.status}): ${a.text}. For users: ${a.consequence}`);
+    out.push('');
+  }
+  if (proposed.length) out.push('Proposed additions (not in your inputs; approve, change or drop each):', '', ...proposed, '');
+  if (!cuts.length && !others.length && !proposed.length) out.push('No assumptions, scope-cuts or proposed additions in this stage.', '');
+
+  if (exists(root, snapshotDir(n))) {
+    const before = readAll(root, listFiles(root, snapshotDir(n), (f) => /\.(md|ya?ml|json)$/i.test(f)));
+    const [was, now] = [definedIds(before), definedIds(text)];
+    const added = [...now].filter((id) => !was.has(id)).sort();
+    const removed = [...was].filter((id) => !now.has(id)).sort();
+    const beforeLines = new Set(before.split(/\r?\n/));
+    const changedLines = text.split(/\r?\n/).filter((l) => l.trim() && !beforeLines.has(l)).length;
+    out.push('## Changes since the last approval', '', `Added: ${added.join(', ') || 'none'}. Removed: ${removed.join(', ') || 'none'}. ${changedLines} new or changed line(s).`, '');
+  }
+
+  if (n === '4') {
+    out.push('## Tasks', '', '| Task | Title | Covers | Depends |', '|------|-------|--------|---------|');
+    for (const t of planTasks(root)) out.push(`| ${t.id} | ${t.title} | ${t.covers.join(', ') || 'none'} | ${t.depends.join(', ') || 'none'} |`);
+    out.push('');
+  }
+  if (n === '6') {
+    const reportLines = (read(root, STAGES[6].doc) || '').split(/\r?\n/);
+    const verdicts = ids(specModel(root).acs).map((id) => {
+      const match = verdictLine(reportLines, id).match(/\b(PASS|FAIL)\b/);
+      return match ? match[1] : 'missing';
+    });
+    const count = (v) => verdicts.filter((x) => x === v).length;
+    out.push('## Results', '', `${count('PASS')} of ${verdicts.length} criteria PASS, ${count('FAIL')} FAIL, ${count('missing')} without a verdict.`, '');
+  }
+  if (errors.length) out.push('## Check errors', '', ...errors.map((e) => `- ${e}`), '');
+  return out.join('\n');
+}
+
+// ---------- write gate (hooks) ----------
+
+const LOCKED_DIRS = [`${STATE_DIR}/approved/`, `${STATE_DIR}/cards/`];
+
+function hookInput() {
+  try { return JSON.parse(fs.readFileSync(0, 'utf8')); } catch { process.exit(0); }
+}
+
+// Why writing `target` is not allowed right now, or null when it is.
+function writeBlock(root, state, target) {
+  const native = process.platform === 'win32' ? target.replace(/^\/([a-z])\//i, '$1:/') : target;
+  const rel = path.relative(root, path.resolve(root, native)).split(path.sep).join('/');
+  if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
+  if (GENERATED.includes(rel) || LOCKED_DIRS.some((d) => rel.startsWith(d))) return `Itqan: ${rel} is generated by itq.mjs. Use its commands instead of editing it.`;
+  if (rel.startsWith('docs/input/') && state.stages['1'].status === 'approved') {
+    return 'Itqan: the inputs are frozen because the Product Spec is approved. If an input changed, stop and tell the user (upstream-change skill).';
+  }
+  const n = STAGE_KEYS.find((k) => STAGES[k].paths.some((p) => (p.endsWith('/') ? rel.startsWith(p) : rel === p)));
+  if (n === undefined) return null;
+  const blocker = firstUnapproved(state, prerequisites(n));
+  if (blocker) return `Itqan: stage ${blocker} (${STAGES[blocker].name}) is not approved, so ${rel} (stage ${n}, ${STAGES[n].name}) cannot be written yet. The order is fixed.`;
+  if (state.stages[n].status === 'approved') {
+    return `Itqan: stage ${n} (${STAGES[n].name}) is approved, so ${rel} is locked. Stop, tell the user what you found, and ask whether to revise it (upstream-change skill).`;
+  }
+  if (state.stages[n].status === 'pending') return `Itqan: stage ${n} (${STAGES[n].name}) has not been started. Run "itq.mjs start ${n}" first.`;
+  return null;
+}
+
+// Paths a Bash or PowerShell command may write: redirection and tee targets, and the arguments of
+// commands that change files (sed -i, rm, mv, cp destination, Set-Content, Remove-Item, ...).
+const WRITE_VERBS = /^(rm|rmdir|unlink|truncate|mv|touch|mkdir|del|erase|ri|Remove-Item|Move-Item|Rename-Item|Set-Content|Add-Content|Clear-Content|Out-File|New-Item)$/i;
+const COPY_VERBS = /^(cp|copy|install|Copy-Item)$/i;
+function writeTargets(command) {
+  const unquote = (word) => word.replace(/^["']|["']$/g, '');
+  const targets = [];
+  for (const part of command.replace(/\\/g, '/').split(/&&|\|\||[;|\n]/)) {
+    for (const m of part.matchAll(/(?:^|[^<>&\d])\d?>{1,2}\s*([^\s&;<>]+)/g)) targets.push(unquote(m[1]));
+    const words = part.trim().split(/\s+/).map(unquote).filter(Boolean);
+    const args = words.slice(1).filter((w) => !w.startsWith('-'));
+    const verb = words[0] || '';
+    if (verb === 'tee' || WRITE_VERBS.test(verb) || (verb === 'sed' && words.some((w) => /^-i/.test(w)))) targets.push(...args);
+    else if (COPY_VERBS.test(verb) && args.length) targets.push(args[args.length - 1]);
+    else if (verb === 'git' && /^(checkout|restore|rm|mv)$/.test(words[1] || '')) targets.push(...args.slice(1));
+  }
+  return targets.filter((t) => t && !/^\/dev\/null$|^\$null$|^NUL$/i.test(t));
 }
 
 // ---------- commands ----------
@@ -563,6 +870,7 @@ const commands = {
     state.stages[n] = { status: 'approved', approvedAt: new Date().toISOString() };
     saveState(root, state);
     if (STAGES[n].doc) setFrontMatter(root, STAGES[n].doc, { status: 'approved', approved_at: today() });
+    saveSnapshot(root, n);
     writeTrace(root, buildTrace(root));
     console.log(`Stage ${n} (${STAGES[n].name}) approved. ${nextAction(state)}`);
   },
@@ -604,31 +912,39 @@ const commands = {
     console.log(renderStatus(state));
   },
 
+  // card <n>: the short review card shown to the user before approval.
+  card(arg) {
+    const root = projectDir();
+    const state = requireState(root);
+    const n = stageArg(arg);
+    const text = renderCard(root, state, n);
+    fs.mkdirSync(abs(root, `${STATE_DIR}/cards`), { recursive: true });
+    fs.writeFileSync(abs(root, `${STATE_DIR}/cards/stage-${n}.md`), text);
+    console.log(text);
+  },
+
   // PreToolUse hook for Write|Edit|MultiEdit|NotebookEdit. Exit 2 blocks the call and shows stderr to the model.
   'hook-gate'() {
-    let input = {};
-    try { input = JSON.parse(fs.readFileSync(0, 'utf8')); } catch { process.exit(0); }
+    const input = hookInput();
     const root = path.resolve(input.cwd || projectDir());
     const state = loadState(root);
-    if (!state) process.exit(0);
     const target = input.tool_input?.file_path || input.tool_input?.notebook_path;
-    if (!target) process.exit(0);
-    const rel = path.relative(root, path.resolve(root, target)).split(path.sep).join('/');
-    if (rel.startsWith('..')) process.exit(0);
+    if (!state || !target) process.exit(0);
+    const reason = writeBlock(root, state, target);
+    if (reason) fail(reason, 2);
+    process.exit(0);
+  },
 
-    if (GENERATED.includes(rel)) fail(`Itqan: ${rel} is generated by itq.mjs. Use its commands instead of editing it.`, 2);
-    if (rel.startsWith('docs/input/') && state.stages['1'].status === 'approved') {
-      fail('Itqan: the inputs are frozen because the Product Spec is approved. If an input changed, stop and tell the user (upstream-change skill).', 2);
-    }
-    const n = STAGE_KEYS.find((k) => STAGES[k].paths.some((p) => (p.endsWith('/') ? rel.startsWith(p) : rel === p)));
-    if (n === undefined) process.exit(0);
-    const blocker = firstUnapproved(state, prerequisites(n));
-    if (blocker) fail(`Itqan: stage ${blocker} (${STAGES[blocker].name}) is not approved, so ${rel} (stage ${n}, ${STAGES[n].name}) cannot be written yet. The order is fixed.`, 2);
-    if (state.stages[n].status === 'approved') {
-      fail(`Itqan: stage ${n} (${STAGES[n].name}) is approved, so ${rel} is locked. Stop, tell the user what you found, and ask whether to revise it (upstream-change skill).`, 2);
-    }
-    if (state.stages[n].status === 'pending') {
-      fail(`Itqan: stage ${n} (${STAGES[n].name}) has not been started. Run "itq.mjs start ${n}" first.`, 2);
+  // PreToolUse hook for Bash|PowerShell: applies the same rules to files a shell command would write.
+  'hook-bash'() {
+    const input = hookInput();
+    const root = path.resolve(input.cwd || projectDir());
+    const state = loadState(root);
+    const command = input.tool_input?.command;
+    if (!state || !command) process.exit(0);
+    for (const target of writeTargets(command)) {
+      const reason = writeBlock(root, state, target);
+      if (reason) fail(`${reason}\n(Blocked shell command writes ${target}.)`, 2);
     }
     process.exit(0);
   },

@@ -24,8 +24,18 @@ depends_on: docs/01-product-spec.md
 - **Signature element:** <the one place the boldness is spent>
 - **Principles:** <3-5 short rules for this product's look>
 - **Default check:** <what in the first plan read as a generic default, and what replaced it>
-- **Contrast:** <each text/background pair with its ratio>
+- **Contrast:** <one line per text/background pair in exactly this form, so the check can recompute it: `Contrast: #1E2B24 on #F5F0E6 = 13.2` (add `large` after the ratio for text 24 px+ or 18.7 px bold)>
 - **Design critique:** <final design-critic scores per dimension, and any accepted gaps>
+
+## Data ranges
+<Every value the screens render that can vary: its smallest and largest realistic value, where that limit comes from, and how the screen handles both ends. Reconcile with the Product Spec; a limit the spec does not set goes back to it as a question, never invented here.>
+
+| Value | Min | Max | Source | Handling at the extremes |
+|-------|-----|-----|--------|--------------------------|
+| <spots per shift> | 1 | 100 | AC-03.2 | <meter shows squares up to 20, then "37 of 60" text> |
+
+## Copy deck
+The user-facing messages live in `docs/02-ux/copy.md` as keys (`MSG.SIGNUP_DONE: You are signed up for {shift}.`). Screens, the Technical Design's error model and the tests refer to the keys; the wording is written once.
 
 ## Navigation
 <Information architecture: the screen map, as a Mermaid flowchart or a nested list.>

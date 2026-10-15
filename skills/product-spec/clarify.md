@@ -20,6 +20,11 @@ Mark each category Clear, Partial or Missing against the inputs and the Constitu
 - Only Partial or Missing items whose answer would change behaviour, data, the UI or the tests. Never ask what the inputs already answer, and never ask about technology or task breakdown here.
 - Rank by impact times uncertainty. At most **eight** questions, in **one numbered batch**, highest impact first.
 
+## 2b. Choose the recommended answer
+- Recommend what **comparable, well-regarded products** do for this situation, for these users. Never recommend the cheapest option by default.
+- If an option would remove or omit a capability that users of comparable products expect (fixing a mistake, being told about a change that affects them, reversing an action, seeing complete data), tag the question **[scope-cut]** and recommend keeping the capability.
+- A [scope-cut] question is never settled by "use defaults" or "you decide": only the user's own words can cut the capability. Without them, keep the capability (as a P2 story) and record it.
+
 ## 3. Write each question
 ```
 1. **Question:** <a full question ending with "?">
@@ -36,5 +41,6 @@ Use a short-answer form ("**Suggested:** <answer> - <why>") when there are no na
 ## 4. Write the answers back
 - Add one line per answer under `## Clarifications` in the Product Spec: `- Q: <question> -> A: <answer> (<date>)`.
 - Apply each answer to the right place: a story or criterion, the permissions table, the glossary, an NFR measure, or the edge cases. Replace any statement the answer contradicts; never leave both.
-- An unanswered question, or "you decide": use the recommendation, record it as assumption A-n, and mark the stories that rest on it `proposed`.
+- An unanswered question, or "you decide": use the recommendation, record it as assumption A-n with its consequence, and mark the stories that rest only on it `proposed`. For a [scope-cut] question, the recommendation is to keep the capability; never cut it on a default.
+- Record who decided: `(user)` or `(default A-n)`.
 - A reading of an input phrase that is now settled also goes in `## Interpretations`.

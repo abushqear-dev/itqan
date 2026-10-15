@@ -16,7 +16,7 @@ Read `.itqan/build-log.md`. Continue with the first task in plan order that has 
 3. **Test first:** write the failing tests (names contain the AC ids), run them and see them fail.
 4. **Implement** until they pass; run the task's Verify command and the full test suite.
 5. **Spec-compliance review:** dispatch the `itqan:task-reviewer` agent (foreground) with the task block, its ACs, the contract slices and `git diff`. Fix every gap and re-review until COMPLIANT. This step is never skipped, whatever the budget.
-6. **Commit** with the task id in the message, append `T-nnn done <short hash>` to the build log, run `itq.mjs trace`.
+6. **Commit** this task alone, with the task id in the message. Append to the build log, in this order: `T-nnn verify: <the Verify command as run> -> <its result>`, `T-nnn reviewed COMPLIANT`, `T-nnn done <short hash>`. Then run `itq.mjs trace`. `itq.mjs check 5` verifies that every task has these lines and its own commit whose message names it.
 
 ## Who implements
 - Preferred: a fresh implementer subagent per task, briefed with [implementer-prompt.md](implementer-prompt.md) and only the narrow context above. Fresh context keeps quality high on long builds. Treat its report as claims: check the commit and the test output before step 5.
@@ -33,6 +33,9 @@ Read `.itqan/build-log.md`. Continue with the first task in plan order that has 
 
 ## Running out of budget or turns
 Stop after the current task's step 6, not in the middle of one. Report which tasks are done and which remain. The next session resumes from the build log. Do not rush or merge tasks to finish in one session.
+
+## Commands file
+T-001 writes `.itqan/commands.json`: `{"install": "...", "test": "...", "e2e": "...", "start": "...", "url": "http://localhost:<port>"}` with the exact commands run from `app/`. `itq.mjs check 5` runs `install` and `test` and requires exit 0 with no skipped tests; the acceptance stage uses the rest. If a plan Verify command turns out to be malformed, run the corrected form, record both in the build log, and list it as a plan deviation in the Acceptance Report.
 
 ## Rules
 - Implement exactly the contracts. A missing field, route, decision or version is an upstream gap: stop and use `itqan:upstream-change`. Do not invent it.

@@ -37,7 +37,7 @@ depends_on: docs/input/
 - **Never:** <e.g. deploy; commit secrets; delete or skip failing tests; edit approved documents>
 
 ## Out of scope for this product
-<Hard non-goals from the inputs.>
+<Only non-goals the inputs state in their own words, quoted. Do not rule out features here (notifications, editing, reports...); scope is decided with the user in the Product Spec. "None stated" if the inputs state none.>
 
 ## Amendments
 <Empty at first approval. When the Constitution is reopened, add one line per change: version, date, what changed, why, and which later stages must be re-checked.>

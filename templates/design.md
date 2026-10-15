@@ -17,6 +17,9 @@ depends_on: docs/02-ux/ux-spec.md
 <One line per MUST principle and quality-bar item in the Constitution: PASS or FAIL, and how this design meets it. A FAIL must be fixed here or raised with the user as an upstream change before approval.>
 - P1 <principle>: PASS. <how>
 
+## Values the spec did not set
+<Every limit, rule or default this design had to choose that the Product Spec and UX Spec do not state (a maximum length, a range, a retention period, a time zone). One line each with the value and why. These are shown to the user on the review card; a value that changes what users can do goes back upstream as a question instead. "None" if none.>
+
 ## Unknowns researched
 <Every technical question the requirements raised that needed research (a library's limits, a browser API, a date-handling rule), with the answer and its source. "None" if none.>
 
@@ -31,13 +34,13 @@ depends_on: docs/02-ux/ux-spec.md
 - **Interfaces:** <operationIds in api.yaml, events, modules it calls>
 
 ## Screen data
-<For every SCR-n in the UX Spec: which operation(s) supply each field and handle each action. Example: "SCR-02 Tool list: listTools (name, owner, status); requestLoan (Request button)".>
+<One line per SCR-n in the UX Spec, starting with its id: which operation supplies each field the screen shows and which handles each action. Every field in the screen's "Shows" list appears here. Example: "- SCR-02 Tool list: listTools -> name, owner, status, free spots; requestLoan (Request button)".>
 
 ## Data
 <Entities and relationships in a Mermaid erDiagram; the exact schema is in data-model.(sql|prisma|md). Or "No persistent data".>
 
 ## Error model
-<Error response shape with one real example, error codes, and which field each validation error names.>
+<Error response shape with one real example, error codes, the copy-deck key each code shows (MSG.*), and which field each validation error names. Refer to the keys; do not repeat the wording.>
 
 ## Security
 <Authentication, authorisation rules per role, data protection, input validation.>

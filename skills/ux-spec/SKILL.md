@@ -20,13 +20,17 @@ Read `${CLAUDE_PLUGIN_ROOT}/vendor/frontend-design/frontend-design.md` (vendored
 3. **Review against generic defaults:** compare the plan with the generic-default list in frontend-design.md and the refusals in `${CLAUDE_PLUGIN_ROOT}/vendor/impeccable/craft-floor.md`. Revise anything that reads as a default rather than a choice for this product, and record what you changed and why.
 4. Write the result to "## Visual direction" and the tokens (colour, type, space, radius, shadow, motion durations) to `docs/02-ux/tokens.json`. Check every text/background pair for WCAG 2.2 AA contrast (4.5:1, 3:1 for large text) and record the ratios.
 
+## 3b. Data ranges and copy deck
+- Fill "## Data ranges": for every rendered value that varies (counts, list lengths, text lengths, dates, durations), the realistic minimum and maximum, its source in the Product Spec, and how each screen handles both ends. A limit the spec does not set is a question back to the user (upstream change), never an invention. Check the signature element and every component against the extremes before drawing them.
+- Write `docs/02-ux/copy.md` from `${CLAUDE_PLUGIN_ROOT}/templates/copy.md`: every message, label with a count (with plural forms), empty state and confirmation, as keys. Screens refer to the keys.
+
 ## 4. Screens
 One SCR-n block per screen with: purpose, the AC ids it serves, every field it shows (glossary terms), every action and the AC it satisfies, and the Empty, Loading, Error and Success states. List criteria with no screen under "Non-UI acceptance criteria". Every AC must appear somewhere.
 
 ## 5. Mockups and wireframes
-- **High-fidelity mockups** of every screen that serves a P1 story, built with the real tokens, real copy and realistic data, at desktop and phone width, saved as HTML in `docs/02-ux/mockups/` (one file per screen, named by SCR id). In an interactive session also publish them as a Claude Artifact (a Design canvas, one artboard per screen labelled with its SCR id and AC ids) and give the user the link.
+- **High-fidelity mockups** of every screen that serves a P1 story, built with the real tokens, the copy deck and realistic data, at desktop and phone width, saved as HTML in `docs/02-ux/mockups/`: `SCR-nn.html` for the main state plus at least one state variant per screen (`SCR-nn-empty.html`, `SCR-nn-error.html` or `SCR-nn-<role>.html`). Every role that sees a screen differently gets its own variant; nothing is left "to be drawn in the build". In an interactive session also publish them as a Claude Artifact (a Design canvas, one artboard per screen labelled with its SCR id and AC ids) and give the user the link.
 - **Wireframes** for the remaining screens in `docs/02-ux/wireframes/`.
-- Show states that matter (empty, error) for the key screens, not only the happy path.
+- **Walkthrough:** for each P1 story, walk its main path through the mockups screen by screen and note any step that has no control, no feedback or a dead end; fix it in the mockups.
 
 ## 6. Design critique
 Screenshot every mockup at 1440 px and 390 px wide (any browser tool: the built-in browser, or `npx playwright screenshot --viewport-size "390,844" <file-url> <png>`). Dispatch the `itqan:design-critic` agent (foreground) with the screenshots, the Visual direction and the tokens. Fix its top fixes and re-run once. Stop after two rounds; record the final scores in the UX Spec. Every dimension must reach 4 or more, or the gap is recorded and shown to the user at approval.
@@ -34,4 +38,4 @@ Screenshot every mockup at 1440 px and 390 px wide (any browser tool: the built-
 ## 7. Best-practice check
 Per screen, check against the pinned Web Interface Guidelines (`${CLAUDE_PLUGIN_ROOT}/vendor/web-interface-guidelines/guidelines.md`) and the ten questions in [heuristics.md](heuristics.md), plus WCAG 2.2 AA, responsive sizes from the Constitution and all four states. Write the screen-level requirements these imply into each SCR block (e.g. "destructive actions ask for confirmation", "all form errors shown at once next to their fields", "counts use correct plurals"), so the build implements them. Report pass or issue per screen.
 
-Gate: `itq.mjs check 2` passes (visual direction with a palette and type, mockups present, four states per screen, every AC reachable, valid tokens, design system section), the review is clean, the design critique is recorded, and the user approves the direction and mockups.
+Gate: `itq.mjs check 2` passes (visual direction with a palette and type, contrast recomputed from the stated pairs, a main mockup and a state variant for every P1 screen, data ranges, a copy deck, four states per screen, every AC reachable, valid tokens, design system section), the review is clean, the design critique is recorded, the review card (`itq.mjs card 2`) is shown, and the user approves the direction and mockups.

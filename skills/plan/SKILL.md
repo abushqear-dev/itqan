@@ -7,7 +7,7 @@ description: Stage 4 of Itqan. Writes the Implementation Plan (docs/04-plan.md),
 
 Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Template: `${CLAUDE_PLUGIN_ROOT}/templates/plan.md`. Inputs: the Technical Design (contracts, layout, run commands), the Product Spec criteria, the UX screens.
 
-- **T-001 is the walking skeleton:** scaffold `app/` per the repository layout, write `app/CLAUDE.md` from `${CLAUDE_PLUGIN_ROOT}/templates/app-CLAUDE.md` (commands, layout, conventions, boundaries from the Constitution), set up the test runner and the run command, one passing smoke test.
+- **T-001 is the walking skeleton:** scaffold `app/` per the repository layout, write `app/README.md` for humans from `${CLAUDE_PLUGIN_ROOT}/templates/app-README.md` (requirements, run, first account, tests) and `app/CLAUDE.md` for the agent from `${CLAUDE_PLUGIN_ROOT}/templates/app-CLAUDE.md` (commands, layout, conventions, boundaries from the Constitution), set up the test runner and the run command, one passing smoke test.
 - **Then one story per task**, as vertical slices (data, API, UI and tests together), ordered so each task builds on finished ones and the app runs after every task.
 - **Each task:** Goal, Covers (AC ids), Depends, Files, Contract (operationIds, entities, SCR ids), Test first (test names containing AC ids), Verify (exact command and expected result), Status: todo.
 - **Write for an engineer with no context.** Exact paths and commands, no "etc.".

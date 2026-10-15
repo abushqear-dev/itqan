@@ -44,6 +44,11 @@ Optional: install the [Superpowers](https://github.com/obra/superpowers) plugin.
 - **Formats Claude can't misread:** EARS acceptance criteria with examples, an OpenAPI 3.1 contract, an exact data model, W3C design tokens and MADR decision records.
 - **UX before the API**, so screens decide what data the system must provide.
 - **Gaps are asked about, not guessed.** `[NEEDS CLARIFICATION]` markers block approval.
+- **Ambiguity and edge cases are swept before building:**
+  - a roles-and-permissions table;
+  - an "Interpretations" list of phrases with more than one reading;
+  - a required edge-case sweep (dates, quantities, permissions, state order, multiple users, notifications, undo), where each rule becomes a testable criterion.
+- **The build survives budget limits.** Every task is test-first, reviewed and committed on its own, and an interrupted build resumes from `.itqan/build-log.md`.
 - **Automated checks per stage** (`itq.mjs check <n>`):
   - every criterion is written in EARS;
   - every screen has all four states;

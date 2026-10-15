@@ -16,7 +16,7 @@ depends_on: docs/03-tech/design.md
 ## Tasks
 
 ### T-001 Walking skeleton
-- **Goal:** scaffold app/ per the repository layout, write app/CLAUDE.md, set up the test runner and the run command, one passing smoke test.
+- **Goal:** scaffold app/ per the repository layout, write app/README.md (for humans, from templates/app-README.md) and app/CLAUDE.md (for the agent), set up the test runner and the run command, one passing smoke test.
 - **Covers:** none
 - **Depends:** none
 - **Files:** <paths>

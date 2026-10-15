@@ -11,7 +11,7 @@ depends_on: docs/04-plan.md
 > **Approve this if:** every criterion you care about is PASS with evidence, the known gaps are acceptable, and the app runs for you with the command below.
 
 ## How to run it
-<Exact commands, URL, sample accounts or seed data.>
+<Exact commands, URL, sample accounts or seed data; the same as app/README.md.>
 
 ## Results by acceptance criterion
 <One line per AC, in order:>

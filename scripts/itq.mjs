@@ -256,6 +256,13 @@ function checkStage(root, n) {
 
   if (n === '1') {
     if (acIds.length === 0) errors.push('The Product Spec defines no acceptance criteria (headings with AC-n.m).');
+    for (const section of ['Roles and permissions', 'Interpretations', 'Edge cases']) {
+      if (!new RegExp(`^##\\s+${section}`, 'mi').test(model.spec || '')) errors.push(`The Product Spec is missing the "## ${section}" section.`);
+    }
+    const edgeSection = ((model.spec || '').split(/^##\s+Edge cases/mi)[1] || '').split(/^##\s/m)[0];
+    for (const category of ['Dates and times', 'Quantities and text', 'Permissions', 'State changes', 'Multiple users', 'Notifications', 'Undo and recovery']) {
+      if (edgeSection && !new RegExp(category, 'i').test(edgeSection)) errors.push(`The Edge cases section does not cover "${category}" (write AC ids or "n/a: reason").`);
+    }
     for (const family of [model.feats, model.stories, model.acs, model.nfrs]) {
       for (const id of duplicates(family)) errors.push(`${id} is defined more than once.`);
     }
@@ -360,6 +367,8 @@ function checkStage(root, n) {
     for (const t of planTasks(root)) if (!t.done) errors.push(`${t.id} is not marked done in .itqan/build-log.md.`);
     const tests = readAll(root, testFiles(root));
     if (testFiles(root).length === 0) errors.push('No test files found under app/.');
+    if (!exists(root, 'app/README.md')) errors.push('app/README.md does not exist (human run instructions; see templates/app-README.md).');
+    if (!exists(root, 'app/CLAUDE.md')) errors.push('app/CLAUDE.md does not exist (agent context).');
     for (const id of acIds) if (!new RegExp(`\\b${id.replace('.', '\\.')}\\b`).test(tests)) errors.push(`${id} has no test that names it.`);
   }
 

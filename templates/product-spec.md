@@ -15,6 +15,9 @@ depends_on: docs/00-constitution.md
 
 **Based on:** <BRD | Vision | both> (`docs/input/...`). **Governing source:** <ruling, or n/a>.
 
+## Clarifications
+<One line per answered question, written by the clarify step: `- Q: <question> -> A: <answer> (<date>)`. "None needed" if the inputs left nothing material open.>
+
 ## Glossary
 | Term | Meaning |
 |------|---------|
@@ -42,7 +45,8 @@ depends_on: docs/00-constitution.md
 
 #### US-01 <Story title>
 As a <role>, I want <capability> so that <benefit>.
-Priority: must | should | proposed. Source: <input reference, or A-n if only an assumption>.
+Priority: P1 | P2 | P3 | proposed. Source: <input reference, clarification, or A-n if only an assumption>.
+Independent test: <how this story alone can be demonstrated, e.g. "a volunteer signs up for a shift with free spots and sees it in My shifts">.
 
 ##### AC-01.1 <Short criterion name>
 WHEN <trigger>, THE SYSTEM SHALL <observable response>.

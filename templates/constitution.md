@@ -14,7 +14,9 @@ depends_on: docs/input/
 <What it is, for whom, and the one outcome that matters. From the inputs only.>
 
 ## Principles
-<3-5 ranked principles that break ties, e.g. "1. Correctness over speed of delivery. 2. Simple over clever.">
+<3-5 ranked principles that break ties. Each is a MUST or SHOULD rule with a one-line reason, so later stages can be checked against it. Example:>
+1. **P1 Correctness first.** The app MUST refuse any action that breaks a stated rule, server-side. Reason: users rely on limits being enforced.
+2. **P2 Simple over clever.** The design SHOULD use the fewest moving parts that meet the requirements. Reason: a small team maintains it.
 
 ## Quality bar
 - **Accessibility:** <e.g. WCAG 2.2 AA on all screens>
@@ -36,3 +38,6 @@ depends_on: docs/input/
 
 ## Out of scope for this product
 <Hard non-goals from the inputs.>
+
+## Amendments
+<Empty at first approval. When the Constitution is reopened, add one line per change: version, date, what changed, why, and which later stages must be re-checked.>

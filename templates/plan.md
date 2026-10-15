@@ -23,7 +23,9 @@ depends_on: docs/03-tech/design.md
 - **Test first:** <smoke test name>
 - **Verify:** `<exact command>` -> <expected output>
 
-### T-002 <One story, one vertical slice>
+## P1 stories
+
+### T-002 [P] <One story, one vertical slice>
 - **Goal:** <what exists when this is done>
 - **Covers:** AC-01.1, AC-01.2
 - **Depends:** T-001
@@ -31,5 +33,7 @@ depends_on: docs/03-tech/design.md
 - **Contract:** <operationIds, entities, SCR ids this task touches>
 - **Test first:** <test names, each containing its AC id>
 - **Verify:** `<exact command>` -> <expected result>
+
+<Group tasks under "## P1 stories", "## P2 stories", "## P3 stories" so the first group alone gives a usable app. Mark a task "[P]" in its heading only when it touches no file another unfinished task touches, so it can be built in parallel.>
 
 <Rules: one story per task; tasks small enough for one focused session; dependencies form no cycle. Progress is not tracked here: the build records it in .itqan/build-log.md, because this plan is locked once approved.>

@@ -12,6 +12,8 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Templates in `${CLAUDE_PLUG
 - **Decisions.** One ADR (`adr/NNNN-title.md`, from the template) per non-obvious choice: stack, database, auth, state handling, testing tools, anything the Constitution left open. Pin versions in "## Stack".
 - **Testing strategy.** Name the test tools and levels, and the rule that tests proving a criterion carry its AC id. Include end-to-end tests for each story's main path and an automated accessibility scan if the Constitution sets an accessibility level.
 - **Run locally.** Exact commands, port and URL. Check the port is free on this machine if you can.
+- **Constitution check.** List every MUST principle and quality-bar item as PASS or FAIL with how the design meets it. A FAIL blocks approval: change the design, or raise it with the user as an upstream change to the Constitution. Do this before drafting the details and again at the end (adapted from Spec Kit's plan template, see NOTICES.md).
+- **Unknowns researched.** When a requirement depends on something you are not sure about (a library's limits, time-zone handling, a browser API), research it and record the answer with its source. Never guess silently.
 - **Nothing speculative.** No "may later swap to X" justifications and no technology the requirements do not need.
 - Optional: if `npx` is available, lint the contract (`npx @redocly/cli lint docs/03-tech/api.yaml`) and fix errors.
 

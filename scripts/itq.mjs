@@ -149,6 +149,12 @@ function headingBlocks(text, prefix) {
   return blocks;
 }
 
+// Text between a "## <heading>" line and the next "## " heading ('' if the section is missing).
+function sectionBody(text, heading) {
+  const after = (text || '').split(new RegExp(`^##\\s+${heading}`, 'mi'))[1];
+  return after === undefined ? '' : after.split(/^##\s/m)[0];
+}
+
 const ids = (blocks) => Object.keys(blocks);
 const duplicates = (blocks) => ids(blocks).filter((id) => blocks.counts[id] > 1);
 const refsIn = (text) => new Set(text ? text.match(ID_PATTERN) || [] : []);
@@ -256,10 +262,15 @@ function checkStage(root, n) {
 
   if (n === '1') {
     if (acIds.length === 0) errors.push('The Product Spec defines no acceptance criteria (headings with AC-n.m).');
-    for (const section of ['Roles and permissions', 'Interpretations', 'Edge cases']) {
+    for (const id of ids(model.stories)) {
+      const block = model.stories[id];
+      if (!/Priority:\s*(P[1-3]|proposed)\b/i.test(block)) errors.push(`${id} has no "Priority: P1|P2|P3|proposed" line.`);
+      if (!/Independent test:/i.test(block)) errors.push(`${id} has no "Independent test:" line.`);
+    }
+    for (const section of ['Clarifications', 'Roles and permissions', 'Interpretations', 'Edge cases']) {
       if (!new RegExp(`^##\\s+${section}`, 'mi').test(model.spec || '')) errors.push(`The Product Spec is missing the "## ${section}" section.`);
     }
-    const edgeSection = ((model.spec || '').split(/^##\s+Edge cases/mi)[1] || '').split(/^##\s/m)[0];
+    const edgeSection = sectionBody(model.spec, 'Edge cases');
     for (const category of ['Dates and times', 'Quantities and text', 'Permissions', 'State changes', 'Multiple users', 'Notifications', 'Undo and recovery']) {
       if (edgeSection && !new RegExp(category, 'i').test(edgeSection)) errors.push(`The Edge cases section does not cover "${category}" (write AC ids or "n/a: reason").`);
     }
@@ -308,10 +319,13 @@ function checkStage(root, n) {
 
   if (n === '3') {
     const design = read(root, doc) || '';
-    for (const section of ['Stack', 'Components', 'Run locally']) {
+    if (/\bFAIL\b/.test(sectionBody(design, 'Constitution check'))) {
+      errors.push('The Constitution check has a FAIL. Fix the design or raise it with the user as an upstream change.');
+    }
+    for (const section of ['Constitution check', 'Stack', 'Components', 'Run locally']) {
       if (!new RegExp(`^##\\s+${section}`, 'mi').test(design)) errors.push(`design.md is missing the "## ${section}" section.`);
     }
-    if (/^##\s+Stack/mi.test(design) && !/\d+\.\d+/.test((design.split(/^##\s+Stack/mi)[1] || '').split(/^##\s/m)[0])) {
+    if (/^##\s+Stack/mi.test(design) && !/\d+\.\d+/.test(sectionBody(design, 'Stack'))) {
       errors.push('The Stack section pins no versions (e.g. "Node 24.1").');
     }
     const noApi = /No HTTP API/i.test(design);

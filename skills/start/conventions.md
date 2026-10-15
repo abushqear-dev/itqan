@@ -23,6 +23,9 @@ Nothing else goes in the project root.
 - An ID is defined by putting it at the start of a heading (`##### AC-03.2 Reject long loans`). Everywhere else it is referenced, never redefined. IDs are never renumbered or reused once their stage is approved.
 - Test names that prove a criterion contain its AC id. That is how the trace reaches the code.
 
+## Voice
+Plain and short, for a busy human reviewer and for an agent that will implement it literally. Active voice, everyday words, one idea per sentence. Say what the product does, not how impressive it is. No filler, no hedging, no marketing. Instructions borrowed from other projects (see NOTICES.md) are rewritten in this voice and Itqan's formats.
+
 ## Writing
 
 - Requirements and criteria use EARS: THE SYSTEM SHALL / WHEN / WHILE / IF ... THEN / WHERE. One observable behaviour per criterion, with one concrete `Example:`.

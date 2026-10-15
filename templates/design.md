@@ -13,6 +13,13 @@ depends_on: docs/02-ux/ux-spec.md
 ## Overview
 <Three to five sentences: the shape of the system and why.>
 
+## Constitution check
+<One line per MUST principle and quality-bar item in the Constitution: PASS or FAIL, and how this design meets it. A FAIL must be fixed here or raised with the user as an upstream change before approval.>
+- P1 <principle>: PASS. <how>
+
+## Unknowns researched
+<Every technical question the requirements raised that needed research (a library's limits, a browser API, a date-handling rule), with the answer and its source. "None" if none.>
+
 ## Stack
 <Language, runtime, framework, database, test tools, each with a pinned version, e.g. "Node 24.1", "React 18.3". Each non-obvious choice links to an ADR.>
 

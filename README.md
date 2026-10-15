@@ -59,6 +59,15 @@ Optional: install the [Superpowers](https://github.com/obra/superpowers) plugin.
 - **Independent reviewers:** a document reviewer, a design researcher, and a spec-compliance reviewer per build task.
 - **A hook enforces the order:** no stage before the previous one is approved, no edits to approved stages, no hand edits to generated state.
 
+## Built on proven sources
+
+Itqan's stage instructions combine its own formats with vetted material, pinned and never fetched at runtime (details in [NOTICES.md](NOTICES.md)):
+- **Spec Kit** (GitHub, MIT): the clarify taxonomy and question format, the "unit tests for English" requirements self-check, analyze-style review passes, prioritised independent stories, the constitution check.
+- **Superpowers** (MIT): test-driven development, writing good tests and verification-before-completion, vendored verbatim; the implementer and task-reviewer patterns, adapted.
+- **Vercel Web Interface Guidelines** (MIT): vendored as the screen checklist.
+- **Anthropic webapp-testing** (Apache-2.0): the reconnaissance-then-act approach behind `scripts/ui-scan.mjs`, which flags stray "null" or "undefined" text, phone-width overflow, console errors and accessibility violations on every screen.
+- **MADR** for decision records, **EARS** for requirements, the **W3C Design Tokens** format for tokens.
+
 ## Project layout
 
 ```
@@ -76,4 +85,4 @@ claude --plugin-dir ./itqan
 claude plugin validate ./itqan
 ```
 
-Evals are in `evals/` (`claude plugin eval .`).
+Run the state-tool test with `bash tests/state-tool.sh`. Evals are in `evals/` (`claude plugin eval .`).

@@ -19,7 +19,9 @@ Read `.itqan/build-log.md`. Continue with the first task in plan order that has 
 6. **Commit** with the task id in the message, append `T-nnn done <short hash>` to the build log, run `itq.mjs trace`.
 
 ## Who implements
-- Preferred: a fresh implementer subagent per task with only the narrow context above (if the Superpowers plugin is installed, `superpowers:subagent-driven-development` and `superpowers:test-driven-development`). Fresh context keeps quality high on long builds.
+- Preferred: a fresh implementer subagent per task, briefed with [implementer-prompt.md](implementer-prompt.md) and only the narrow context above. Fresh context keeps quality high on long builds. Treat its report as claims: check the commit and the test output before step 5.
+- Test-first rules: `${CLAUDE_PLUGIN_ROOT}/vendor/superpowers/test-driven-development.md` and `writing-good-tests.md` (vendored from Superpowers, pinned).
+- Before any claim that a task, the suite or the build passes: `${CLAUDE_PLUGIN_ROOT}/vendor/superpowers/verification-before-completion.md`. Evidence before claims, always.
 - When budget or turns are tight, implement in the main session instead, but keep steps 1-6 for every task. Never batch several tasks into one review or one commit, and never skip the review to save budget.
 - Every three tasks, or before the session ends, run the full test suite and a code review (`/code-review` or a reviewer subagent) on the work since the last one; fix real issues only.
 

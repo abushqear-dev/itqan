@@ -1,0 +1,12 @@
+{
+  "name": "itqan-plugins",
+  "description": "Itqan: spec-driven product building for Claude Code.",
+  "owner": { "name": "Mohammed Abu-Shqear" },
+  "plugins": [
+    {
+      "name": "itqan",
+      "source": "./",
+      "description": "Idea to approved specs to a tested, locally running product, with gates, contracts and traceability."
+    }
+  ]
+}

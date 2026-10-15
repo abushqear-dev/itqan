@@ -1,0 +1,9 @@
+{
+  "name": "itqan",
+  "displayName": "Itqan",
+  "version": "0.1.0",
+  "description": "Spec-driven product building for Claude Code: Constitution, Product Spec (EARS), UX Spec, Technical Design with contracts and ADRs, Implementation Plan, test-first build and an evidence-based Acceptance Report, with approval gates and generated traceability.",
+  "author": { "name": "Mohammed Abu-Shqear" },
+  "license": "MIT",
+  "keywords": ["spec-driven", "product", "requirements", "EARS", "ADR", "OpenAPI", "traceability"]
+}

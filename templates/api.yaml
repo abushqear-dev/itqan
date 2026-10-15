@@ -1,0 +1,48 @@
+openapi: 3.1.0
+info:
+  title: <Product name> API
+  version: 0.1.0
+  description: >
+    Contract for the app. Every operation names the acceptance criteria it serves in
+    x-acceptance. The build implements exactly these paths, fields and status codes.
+paths:
+  /api/example:
+    get:
+      operationId: listExamples
+      x-acceptance: [AC-01.1]
+      summary: <one line>
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Example'
+              example:
+                - id: ex_1
+                  name: Drill
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  schemas:
+    Example:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string, minLength: 1, maxLength: 80 }
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: VALIDATION }
+        message: { type: string }
+        field: { type: string, description: Name of the invalid input, if any }
+  responses:
+    Unauthorized:
+      description: Not signed in
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }

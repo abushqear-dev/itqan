@@ -26,3 +26,6 @@ You are given: screenshot paths (desktop and phone), the UX Spec's "## Visual di
 - **Top fixes:** at most five, most impactful first, each naming the screen, the problem and the concrete change (token, spacing value, type size, layout move).
 - For built screens, list every visible difference from the mockup that is not an improvement.
 Do not redesign the product or change its direction; critique against the direction that was approved.
+
+## Anchors (v0.6)
+Score against the anchored levels in `${CLAUDE_PLUGIN_ROOT}/rubrics/R4.md` (levels 1, 3 and 5 for each of the seven dimensions) and follow `rubrics/COMMON.md`: evidence before every score, three samples with the median taken by the caller. The score is advisory until `rubrics/R4.calibration.json` says it counts.

@@ -43,3 +43,8 @@ T-001 writes `.itqan/commands.json`: `{"install": "...", "test": "...", "e2e": "
 - Never skip, delete or weaken a failing test. Never deploy.
 - Show evidence, not claims: the commands you ran and their output.
 - When all tasks are done, start the app with the Run command, confirm it serves, and hand over to `itqan:acceptance`.
+
+## Health gate per task (v0.6)
+After the tests pass and before the task commit, run `node "${CLAUDE_PLUGIN_ROOT}/scripts/health.mjs" --app app --changed git:HEAD~1 --mode task --json` (coverage on changed files, mutation score on changed files, complexity, duplication, Semgrep, dependency audit). For tasks that touch screens also run `scripts/token-audit.mjs` and `scripts/fidelity.mjs` against the matching mockup, and `scripts/ui-scan.mjs --states`. Write the numbers to `.itqan/scores/5/values.json` (ids from `scorecards.json`: B-S1 coverage, B-S2 mutation, B-S3 complexity, B-S4 duplication, B-S5 token audit, B-S6 fidelity, B-S7 states) and run `itq.mjs score 5`. A failed gate means fixing the code; after three rounds the task is logged as blocked with its scorecard and the build moves to independent tasks. The task-reviewer reads this output instead of judging quality by eye.
+
+**If Semgrep cannot run** (native Windows without Docker, or no network for the rule packs), `health.mjs` falls back to a reduced scan: `eslint-plugin-security` at error level on JavaScript files only. The output says `REDUCED` and `securityMode: "reduced"`. It still gates the task, but the Acceptance Report must say that the full OWASP scan did not run and which tool did; a reduced scan never counts as Semgrep. TypeScript-only changes get no reduced scan and the gate fails as unavailable.

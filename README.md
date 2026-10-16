@@ -9,13 +9,14 @@ Itqan is a Claude Code plugin for spec-driven product building. It takes a produ
 | Stage | Document | What it settles |
 |---|---|---|
 | Intake | `docs/input/` | The BRD and/or Vision, classified, with conflicts ruled on |
-| 0 Constitution | `docs/00-constitution.md` | Principles, quality bar, constraints, agent boundaries |
+| D Discovery | `docs/00-discovery.md` | 3-5 cited competitors, table-stakes features you rule on, personas and jobs, positioning |
+| 0 Constitution | `docs/00-constitution.md` | Principles, quality bar, ISO 25010 quality-attribute scenarios with numbers, standards (WCAG 2.2 AA, ASVS Level 1), constraints, agent boundaries |
 | 1 Product Spec | `docs/01-product-spec.md` | Features, stories, EARS acceptance criteria with examples, measurable NFRs |
 | 2 UX Spec | `docs/02-ux/` | Researched design system, an art-directed visual direction, tokens, screens with data, actions and four states, high-fidelity mockups critiqued by a design-critic agent |
-| 3 Technical Design | `docs/03-tech/` | Stack (pinned), components, OpenAPI contract, data model, ADRs |
+| 3 Technical Design | `docs/03-tech/` | Stack (pinned), components, OpenAPI contract, data model, ADRs, quality tactics, STRIDE threat model, ASVS Level 1 decisions |
 | 4 Implementation Plan | `docs/04-plan.md` | Ordered vertical-slice tasks covering every criterion |
 | 5 Build | `app/` | Test-first, one task per subagent, reviewed after each |
-| 6 Acceptance | `docs/05-acceptance.md` | Every criterion PASS or FAIL with evidence |
+| 6 Verification and Acceptance | `docs/05-acceptance.md` | Every criterion PASS or FAIL with evidence, security and performance measurements, and the two quality indices |
 
 You approve every stage. Approval only works when the automated check for that stage passes.
 
@@ -40,6 +41,10 @@ Update: `claude plugin marketplace update itqan-plugins`, then `claude plugin up
 Optional: install the [Superpowers](https://github.com/obra/superpowers) plugin. The build stage uses its subagent-driven development and test-driven development skills when they are available.
 
 ## How it keeps quality
+
+- **Every stage is scored** (`itq.mjs score <n>`, thresholds in `scorecards.json`): pass/fail gates plus weighted scores from script checks, with judge metrics that stay advisory until each rubric has a calibration record (`rubrics/`, `scripts/calibrate.mjs`). A draft reaches you when its gates pass and its score meets the stage target, or after at most three rounds with the remaining gaps shown. Approval stays yours.
+- **Two indices at the end** (`itq.mjs index`): an Industry Standard Index built on ISO/IEC 25010 and a Sell Standard Index measured against the competitors found in Discovery, each with a band (ship-ready, strong prototype, not ready).
+- **Measured, not asserted:** requirement-smell lint, table-stakes coverage, token and mockup-fidelity audits, forced UI states and widths, a per-task health gate (coverage, mutation score, complexity, duplication, Semgrep, dependency audit), role-by-route security probes and Lighthouse budgets.
 
 - **Formats Claude can't misread:** EARS acceptance criteria with examples, an OpenAPI 3.1 contract, an exact data model, W3C design tokens and MADR decision records.
 - **UX before the API**, so screens decide what data the system must provide.

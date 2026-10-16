@@ -1,0 +1,1 @@
+{"statistics":{"total":{"lines":100,"duplicatedLines":8,"percentage":8,"clones":1}},"duplicates":[{"lines":8,"firstFile":{"name":"src/a.js","start":1},"secondFile":{"name":"src/a.js","start":20}}]}

@@ -1,0 +1,1 @@
+{"error":{"code":"ENOLOCK","summary":"This command requires an existing lockfile.","detail":"x"}}

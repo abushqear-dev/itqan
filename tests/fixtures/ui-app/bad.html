@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bad</title>
+<style>
+  body { font:13px system-ui; color:#123456; background:#fff; margin:0; padding:3px; }
+  .wide { width:900px; background:#eee; }
+  button { width:10px; height:10px; outline:none; border:0; background:#ccc; animation:spin 2s linear infinite; }
+  a { outline:none; }
+  .clip { width:60px; overflow:hidden; white-space:nowrap; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style></head>
+<body><div class="wide">This line is far wider than a phone screen</div>
+<button type="button" aria-label="x"></button> <a href="/">Back</a>
+<div class="clip">Text that is cut off by its box</div></body></html>

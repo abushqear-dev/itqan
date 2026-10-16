@@ -5,6 +5,11 @@
 //
 // Usage: node ui-scan.mjs --app <app dir> --url <base url> --routes "#/,#/shifts,#/report"
 //        [--storage <playwright storage-state.json>] [--width 375] [--height 812]
+//
+// States mode: node ui-scan.mjs --states --app <app dir> --url <base url> [--config .itqan/states.json] [--copy docs/02-ux/copy.md]
+//        [--only SCR-01,SCR-02] [--routes "/a,/b"] [--storage state.json] [--height 900] [--json]
+// Per screen it forces loading/error/empty data states, checks hover/focus/active/disabled styles, widths 375/768/1440,
+// reduced motion, focus-indicator contrast and target size. With --json the per-check lines go to stderr and the summary to stdout.
 // Exit code 1 if any screen shows stray text, horizontal overflow, console errors or serious accessibility violations.
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -12,8 +17,11 @@ import fs from 'node:fs';
 
 function parseArgs(argv) {
   const args = { width: 375, height: 812 };
-  for (let i = 0; i < argv.length; i += 2) args[argv[i].replace(/^--/, '')] = argv[i + 1];
-  if (!args.app || !args.url || !args.routes) {
+  for (let i = 0; i < argv.length; i++) {
+    const key = argv[i].replace(/^--/, '');
+    if (key === 'states' || key === 'json') args[key] = true; else args[key] = argv[++i];
+  }
+  if (args.states ? !args.app || !args.url : !args.app || !args.url || !args.routes) {
     console.error('Usage: node ui-scan.mjs --app <app dir> --url <base url> --routes "#/,#/page" [--storage state.json] [--width 375]');
     process.exit(2);
   }
@@ -65,6 +73,7 @@ async function scanScreen(page, url, AxeBuilder) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
+  if (args.states) return (await import('./lib/ui-states-cli.mjs')).runStatesCli(args);
   const playwright = loadFromApp(args.app, 'playwright') || loadFromApp(args.app, '@playwright/test');
   if (!playwright) {
     console.error('Playwright is not installed in the app. Add it as a dev dependency (npm i -D playwright) and run npx playwright install chromium.');

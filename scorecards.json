@@ -1,0 +1,157 @@
+{
+  "_comment": "Scorecards per stage. gate: pass/fail. score: normalised 0-100 between floor and target (floor may be above target for lower-is-better). method S script, J judge (advisory until calibrated), E explorer. rubric names the judge rubric whose calibration decides whether a J metric counts. Source of every threshold: plans/phase-cd-scorecards.md.",
+  "version": 1,
+  "stages": {
+    "D": { "name": "Discovery", "target": 85, "floor": 60, "metrics": [
+      { "id": "D-G1", "kind": "gate", "method": "S", "label": "3-5 competitors, each with URL and access date" },
+      { "id": "D-G2", "kind": "gate", "method": "S", "label": "Every matrix cell has a source URL and an ISO date" },
+      { "id": "D-G3", "kind": "gate", "method": "S", "label": "Positioning fills all Moore slots" },
+      { "id": "D-G4", "kind": "gate", "method": "S", "label": "Every table-stakes feature ruled by the user" },
+      { "id": "D-S1", "kind": "score", "method": "S", "target": 100, "floor": 80, "weight": 15, "label": "Cited URLs that answer HTTP 200" },
+      { "id": "D-S2", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 15, "label": "Dates within the freshness window" },
+      { "id": "D-S3", "kind": "score", "method": "S", "target": 100, "floor": 50, "weight": 15, "label": "Table-stakes and differentiation claims with two independent domains" },
+      { "id": "D-S4", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 10, "label": "Jobs with an outcome statement" },
+      { "id": "D-S5", "kind": "score", "method": "S", "target": 100, "floor": 50, "weight": 10, "label": "Personas used by a job" },
+      { "id": "D-S6", "kind": "score", "method": "J", "rubric": "R1", "target": 95, "floor": 70, "weight": 35, "label": "Claims supported by their cited page" }
+    ]},
+    "0": { "name": "Constitution", "target": 90, "floor": 70, "metrics": [
+      { "id": "K-G1", "kind": "gate", "method": "S", "label": "Every quality-bar item has a number and a unit" },
+      { "id": "K-G2", "kind": "gate", "method": "S", "label": "A quality-attribute scenario per ISO 25010 characteristic in scope" },
+      { "id": "K-G3", "kind": "gate", "method": "S", "label": "ASVS level, WCAG level and device matrix stated" },
+      { "id": "K-S1", "kind": "score", "method": "J", "rubric": "R2-K", "target": 100, "floor": 60, "weight": 60, "label": "MUST principles that a later check can verify" },
+      { "id": "K-S2", "kind": "score", "method": "S", "target": 100, "floor": 50, "weight": 40, "label": "Characteristics out of scope have a reason" }
+    ]},
+    "1": { "name": "Product Spec", "target": 85, "floor": 65, "metrics": [
+      { "id": "P-G1", "kind": "gate", "method": "S", "label": "No NEEDS CLARIFICATION or TBD" },
+      { "id": "P-G2", "kind": "gate", "method": "S", "label": "Criteria in EARS form with an Example" },
+      { "id": "P-G3", "kind": "gate", "method": "S", "label": "Input sentences covered or ruled out" },
+      { "id": "P-G4", "kind": "gate", "method": "S", "label": "NFRs with Measure and Verify" },
+      { "id": "P-G5", "kind": "gate", "method": "S", "label": "Table-stakes features ruled" },
+      { "id": "P-G6", "kind": "gate", "method": "S", "label": "Scope-cuts settled; lifecycle complete" },
+      { "id": "P-G7", "kind": "gate", "method": "J", "label": "Reviewer findings CRITICAL or HIGH", "alwaysCounted": true },
+      { "id": "P-G8", "kind": "gate", "method": "S", "label": "IDs unique and sequential" },
+      { "id": "P-S1", "kind": "score", "method": "S", "target": 0, "floor": 10, "weight": 25, "label": "Requirement smells per 100 criteria" },
+      { "id": "P-S2", "kind": "score", "method": "S", "target": 100, "floor": 80, "weight": 15, "label": "Singular criteria" },
+      { "id": "P-S3", "kind": "score", "method": "S", "target": 0, "floor": 5, "weight": 10, "label": "Glossary drift" },
+      { "id": "P-S4", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 15, "label": "Table-stakes features in scope or dropped by the user" },
+      { "id": "P-S5", "kind": "score", "method": "S", "target": 100, "floor": 50, "weight": 10, "label": "Characteristics in scope that have an NFR" },
+      { "id": "P-S6", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 5, "label": "Stories small with an independent test" },
+      { "id": "P-S7", "kind": "score", "method": "J", "rubric": "R2", "target": 4.5, "floor": 3, "weight": 10, "label": "ISO 29148 characteristics per criterion" },
+      { "id": "P-S8", "kind": "score", "method": "J", "rubric": "R3", "target": 4.5, "floor": 3, "weight": 10, "label": "INVEST per story" }
+    ]},
+    "2": { "name": "UX Spec", "target": 85, "floor": 65, "metrics": [
+      { "id": "X-G1", "kind": "gate", "method": "S", "label": "Four states per screen; P1 mockups with hover, focus, disabled variants" },
+      { "id": "X-G2", "kind": "gate", "method": "S", "label": "Contrast, non-text contrast, target size, reflow" },
+      { "id": "X-G3", "kind": "gate", "method": "S", "label": "axe on mockups: no serious or critical" },
+      { "id": "X-G4", "kind": "gate", "method": "S", "label": "No values off the token set" },
+      { "id": "X-G5", "kind": "gate", "method": "S", "label": "impeccable detect findings all waived" },
+      { "id": "X-G6", "kind": "gate", "method": "J", "rubric": "R4", "label": "No open P0/P1 heuristic findings" },
+      { "id": "X-S1", "kind": "score", "method": "J", "rubric": "R4", "target": 36, "floor": 24, "weight": 25, "label": "Nielsen total /40" },
+      { "id": "X-S2", "kind": "score", "method": "J", "rubric": "R4", "target": 4.5, "floor": 3, "weight": 25, "label": "Design-critic mean of 7 dimensions" },
+      { "id": "X-S3", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 10, "label": "Type limits" },
+      { "id": "X-S4", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 10, "label": "Colour and motion rules" },
+      { "id": "X-S5", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 10, "label": "Copy rules" },
+      { "id": "X-S6", "kind": "score", "method": "S", "target": 1.0, "floor": 1.5, "weight": 10, "label": "Steps per P1 task relative to competitor median" },
+      { "id": "X-S7", "kind": "score", "method": "J", "rubric": "R7", "target": 60, "floor": 30, "weight": 10, "label": "Pairwise win-or-tie rate vs competitor screens" }
+    ]},
+    "3": { "name": "Technical Design", "target": 85, "floor": 65, "metrics": [
+      { "id": "T-G1", "kind": "gate", "method": "S", "label": "OpenAPI lint errors" },
+      { "id": "T-G2", "kind": "gate", "method": "S", "label": "Screen data lines mapped to operations" },
+      { "id": "T-G3", "kind": "gate", "method": "S", "label": "ASVS 5.0 L1 rows all decided" },
+      { "id": "T-G4", "kind": "gate", "method": "S", "label": "STRIDE covers every trust boundary; every threat has a mitigation link" },
+      { "id": "T-G5", "kind": "gate", "method": "S", "label": "Every QAS has a tactic and a verify method" },
+      { "id": "T-G6", "kind": "gate", "method": "S", "label": "Dependencies pinned with allowed licences" },
+      { "id": "T-G7", "kind": "gate", "method": "S", "label": "Constitution check has no FAIL" },
+      { "id": "T-S1", "kind": "score", "method": "J", "rubric": "R5", "target": 4.5, "floor": 3, "weight": 30, "label": "Threat-model quality" },
+      { "id": "T-S2", "kind": "score", "method": "J", "rubric": "R6", "target": 4.5, "floor": 3, "weight": 20, "label": "Decision records" },
+      { "id": "T-S3", "kind": "score", "method": "S", "target": 100, "floor": 60, "weight": 20, "label": "Test strategy states every threshold" },
+      { "id": "T-S4", "kind": "score", "method": "S", "target": 100, "floor": 0, "weight": 10, "label": "C4 diagrams present and consistent" },
+      { "id": "T-S5", "kind": "score", "method": "J", "rubric": "R2", "target": 100, "floor": 80, "weight": 20, "label": "Behaviour-changing values sent upstream" }
+    ]},
+    "4": { "name": "Implementation Plan", "target": 95, "floor": 80, "metrics": [
+      { "id": "L-G1", "kind": "gate", "method": "S", "label": "Every AC, applicable ASVS row, mitigation and verify method has a task" },
+      { "id": "L-G2", "kind": "gate", "method": "S", "label": "Every verify command runs and selects its tests" },
+      { "id": "L-G3", "kind": "gate", "method": "S", "label": "T-001 is the walking skeleton" },
+      { "id": "L-S1", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 60, "label": "Tasks within size limit" },
+      { "id": "L-S2", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 40, "label": "Parallel markers consistent with file overlap" }
+    ]},
+    "5": { "name": "Build (per task)", "target": 90, "floor": 70, "metrics": [
+      { "id": "B-G1", "kind": "gate", "method": "S", "label": "Tests pass, none skipped, criterion ids in titles" },
+      { "id": "B-G2", "kind": "gate", "method": "S", "label": "Lint and typecheck errors, incl. raw-colour lint" },
+      { "id": "B-G3", "kind": "gate", "method": "S", "label": "Semgrep ERROR, audit high or critical" },
+      { "id": "B-G4", "kind": "gate", "method": "J", "label": "Task-reviewer spec compliance", "alwaysCounted": true },
+      { "id": "B-G5", "kind": "gate", "method": "S", "label": "One reviewed commit for the task" },
+      { "id": "B-S1", "kind": "score", "method": "S", "target": 90, "floor": 60, "weight": 15, "label": "Line coverage on new code" },
+      { "id": "B-S2", "kind": "score", "method": "S", "target": 80, "floor": 40, "weight": 20, "label": "Mutation score on changed files" },
+      { "id": "B-S3", "kind": "score", "method": "S", "target": 0, "floor": 10, "weight": 10, "label": "Functions over complexity limits (%)" },
+      { "id": "B-S4", "kind": "score", "method": "S", "target": 0, "floor": 6, "weight": 5, "label": "Duplication on new code (%)" },
+      { "id": "B-S5", "kind": "score", "method": "S", "target": 100, "floor": 90, "weight": 10, "label": "Token audit of touched screens" },
+      { "id": "B-S6", "kind": "score", "method": "S", "target": 0.95, "floor": 0.75, "weight": 20, "label": "DOM fidelity vs mockup" },
+      { "id": "B-S7", "kind": "score", "method": "S", "target": 100, "floor": 70, "weight": 10, "label": "States harness" },
+      { "id": "B-S8", "kind": "score", "method": "J", "rubric": "R8", "target": 5, "floor": 3, "weight": 10, "label": "Test quality" }
+    ]},
+    "6": { "name": "Verification and Acceptance", "target": 85, "floor": 65, "metrics": [
+      { "id": "A-G1", "kind": "gate", "method": "S", "label": "Every P1 criterion PASS with evidence" },
+      { "id": "A-G2", "kind": "gate", "method": "S", "label": "Suite and end-to-end pass, none skipped, 0 flaky over 3 reruns" },
+      { "id": "A-G3", "kind": "gate", "method": "S", "label": "Role x route matrix: 401 / 403 / no IDOR" },
+      { "id": "A-G4", "kind": "gate", "method": "S", "label": "axe serious or critical on any route and role" },
+      { "id": "A-G5", "kind": "gate", "method": "E", "label": "Explorer Blocker defects" },
+      { "id": "A-G6", "kind": "gate", "method": "S", "label": "Runs from README in 3 commands with seed data" }
+    ]}
+  },
+  "indices": {
+    "ISI": { "name": "Industry Standard Index (ISO/IEC 25010:2023)", "bands": { "ship-ready": 85, "strong-prototype": 70 }, "groups": [
+      { "id": "functional", "weight": 25, "parts": [
+        { "id": "I-F1", "target": 100, "floor": 70, "w": 40, "label": "P2 criteria PASS" },
+        { "id": "I-F2", "target": 100, "floor": 50, "w": 10, "label": "P3 criteria PASS" },
+        { "id": "I-F3", "target": 0, "floor": 5, "w": 50, "label": "Explorer Major defects" } ] },
+      { "id": "interaction", "weight": 15, "parts": [
+        { "id": "I-U1", "target": 100, "floor": 60, "w": 40, "label": "Persona task success" },
+        { "id": "I-U2", "target": 36, "floor": 24, "w": 20, "label": "Nielsen total on built screens" },
+        { "id": "I-U3", "target": 100, "floor": 80, "w": 20, "label": "Keyboard walk" },
+        { "id": "I-U4", "target": 0, "floor": 10, "w": 20, "label": "axe moderate violations" } ] },
+      { "id": "security", "weight": 15, "parts": [
+        { "id": "I-S1", "target": 100, "floor": 70, "w": 50, "label": "ASVS L1 rows with a passing test" },
+        { "id": "I-S2", "target": 100, "floor": 70, "w": 30, "label": "Threat mitigations with a passing test" },
+        { "id": "I-S3", "target": 0, "floor": 3, "w": 20, "label": "ZAP baseline High findings", "optional": true } ] },
+      { "id": "reliability", "weight": 10, "parts": [
+        { "id": "I-R1", "target": 100, "floor": 60, "w": 60, "label": "Reliability probes" },
+        { "id": "I-R2", "target": 0, "floor": 5, "w": 40, "label": "Console errors across the walk" } ] },
+      { "id": "performance", "weight": 10, "parts": [
+        { "id": "I-P1", "target": 90, "floor": 50, "w": 30, "label": "Lighthouse performance" },
+        { "id": "I-P2", "target": 100, "floor": 0, "w": 40, "label": "Web vitals passed (LCP, CLS, TBT)" },
+        { "id": "I-P3", "target": 1, "floor": 2, "w": 30, "label": "API p95 relative to the NFR" } ] },
+      { "id": "maintainability", "weight": 15, "parts": [
+        { "id": "I-M1", "target": 85, "floor": 60, "w": 25, "label": "Coverage" },
+        { "id": "I-M2", "target": 80, "floor": 40, "w": 30, "label": "Mutation score" },
+        { "id": "I-M3", "target": 0, "floor": 10, "w": 20, "label": "Functions over complexity limits (%)" },
+        { "id": "I-M4", "target": 0, "floor": 6, "w": 15, "label": "Duplication (%)" },
+        { "id": "I-M5", "target": 0, "floor": 20, "w": 10, "label": "Lint warnings per kLOC" } ] },
+      { "id": "compat-safety", "weight": 10, "parts": [
+        { "id": "I-C1", "target": 100, "floor": 60, "w": 50, "label": "Browser and width matrix" },
+        { "id": "I-C2", "target": 100, "floor": 70, "w": 50, "label": "Destructive actions confirmable or undoable" } ] }
+    ]},
+    "SSI": { "name": "Sell Standard Index (against the Discovery baseline)", "bands": { "ship-ready": 80, "strong-prototype": 65 }, "groups": [
+      { "id": "parity", "weight": 25, "parts": [ { "id": "S-T1", "target": 100, "floor": 60, "w": 100, "label": "In-scope table-stakes features working end to end" } ] },
+      { "id": "time-to-value", "weight": 15, "parts": [
+        { "id": "S-V1", "target": 1.0, "floor": 2.0, "w": 60, "label": "Steps to core job vs competitor median" },
+        { "id": "S-V2", "target": 100, "floor": 0, "w": 40, "label": "Success in 3 of 3 runs" } ] },
+      { "id": "polish", "weight": 20, "parts": [
+        { "id": "S-P1", "target": 60, "floor": 20, "w": 40, "label": "Pairwise win-or-tie vs 3 competitors" },
+        { "id": "S-P2", "target": 4.5, "floor": 3, "w": 30, "label": "Design-critic on built screens" },
+        { "id": "S-P3", "target": 0.95, "floor": 0.75, "w": 30, "label": "DOM fidelity overall" } ] },
+      { "id": "copy-trust", "weight": 15, "parts": [
+        { "id": "S-C1", "target": 100, "floor": 80, "w": 30, "label": "Copy-deck consistency" },
+        { "id": "S-C2", "target": 0, "floor": 3, "w": 40, "label": "Explorer Major defects (misled or stuck)" },
+        { "id": "S-C3", "target": 0, "floor": 1, "w": 30, "label": "Stray text: null, undefined, raw errors" } ] },
+      { "id": "speed", "weight": 10, "parts": [
+        { "id": "S-W1", "target": 100, "floor": 0, "w": 60, "label": "Web vitals passed" },
+        { "id": "S-W2", "target": 100, "floor": 50, "w": 40, "label": "Optimistic UI responds within 100 ms", "optional": true } ] },
+      { "id": "first-run", "weight": 15, "parts": [
+        { "id": "S-R1", "target": 100, "floor": 0, "w": 40, "label": "README runs clean in 3 commands" },
+        { "id": "S-R2", "target": 100, "floor": 0, "w": 30, "label": "Seed data covers every role" },
+        { "id": "S-R3", "target": 100, "floor": 70, "w": 30, "label": "Empty state with a next step on every P1 list" } ] }
+    ]}
+  },
+  "decision": { "maxRounds": 3, "minGain": 2, "costCapUsd": { "document": 5, "build-task": 3, "acceptance": 10 } }
+}

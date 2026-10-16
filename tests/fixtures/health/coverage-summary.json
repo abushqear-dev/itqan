@@ -1,0 +1,26 @@
+{
+ "total": {
+  "lines": {
+   "total": 30,
+   "covered": 24,
+   "skipped": 0,
+   "pct": 80
+  }
+ },
+ "C:\\proj\\app\\src\\a.js": {
+  "lines": {
+   "total": 10,
+   "covered": 9,
+   "skipped": 0,
+   "pct": 90
+  }
+ },
+ "C:/proj/app/src/b.js": {
+  "lines": {
+   "total": 20,
+   "covered": 15,
+   "skipped": 0,
+   "pct": 75
+  }
+ }
+}

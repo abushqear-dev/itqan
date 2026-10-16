@@ -15,3 +15,9 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Template: `${CLAUDE_PLUGIN_
 - Every quality-bar target carries a number and a unit.
 - On a reopen, bump the version and add a line under "## Amendments" saying what changed and which stages must be re-checked.
 - Approval gate: `itq.mjs check 0` passes, the review is clean, and the user approves.
+
+## Quality-attribute scenarios (v0.6)
+- Inputs now include the approved Discovery (`docs/00-discovery.md`): read what comparable products offer before setting the quality bar.
+- For every ISO/IEC 25010 characteristic that matters here (Functional suitability, Performance efficiency, Compatibility, Interaction capability, Reliability, Security, Maintainability, Flexibility, Safety) write at least one `QAS-n` line: Source, Stimulus, Response and a numeric Measure. A characteristic with no scenario goes under "Characteristics out of scope" with a reason.
+- State the standards: WCAG 2.2 AA (target size 24x24 px), OWASP ASVS 5.0 Level 1, the browser/device matrix.
+- Gate additions: `itq.mjs check 0` fails without QAS lines that carry a number, without the WCAG and ASVS levels, or without a browsers line. `itq.mjs score 0` then measures stage 0 (rubric R2-K judges whether each MUST principle can be checked).

@@ -2,9 +2,14 @@
 // Itqan state tool: project state, automated quality checks, generated traceability and hook handlers.
 // No dependencies. Usage: node itq.mjs <command> [args]
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkDiscovery } from './discovery-check.mjs';
+import { collect } from './collectors.mjs';
+import { asvsSkeleton, checkConstitutionQuality, checkDesignSecurity } from './security-check.mjs';
+import { band, decide, evaluateIndex, evaluateStage } from './scoring.mjs';
 
 const PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_DIR = '.itqan';
@@ -12,6 +17,7 @@ const GENERATED = ['.itqan/state.json', '.itqan/STATUS.md', '.itqan/TRACE.md'];
 
 // Each stage owns a set of paths. `doc` is the file whose front matter carries the stage status.
 const STAGES = {
+  D: { name: 'Discovery', doc: 'docs/00-discovery.md', paths: ['docs/00-discovery.md'] },
   0: { name: 'Constitution', doc: 'docs/00-constitution.md', paths: ['docs/00-constitution.md'] },
   1: { name: 'Product Spec', doc: 'docs/01-product-spec.md', paths: ['docs/01-product-spec.md'] },
   2: { name: 'UX Spec', doc: 'docs/02-ux/ux-spec.md', paths: ['docs/02-ux/'] },
@@ -20,11 +26,13 @@ const STAGES = {
   5: { name: 'Build', doc: null, paths: ['app/'] },
   6: { name: 'Acceptance', doc: 'docs/05-acceptance.md', paths: ['docs/05-acceptance.md'] },
 };
-const STAGE_KEYS = Object.keys(STAGES);
+// Object.keys would list the numeric keys first, so the order is explicit: Discovery, then 0-6.
+const STAGE_KEYS = ['D', '0', '1', '2', '3', '4', '5', '6'];
+const pos = (k) => STAGE_KEYS.indexOf(k);
 // Acceptance is written while the build runs, so it needs stages 0-4, not 5.
-const prerequisites = (n) => (n === '6' ? ['0', '1', '2', '3', '4'] : STAGE_KEYS.filter((k) => Number(k) < Number(n)));
+const prerequisites = (n) => (n === '6' ? ['D', '0', '1', '2', '3', '4'] : STAGE_KEYS.filter((k) => pos(k) < pos(n)));
 
-const ID_PATTERN = /\b(FEAT-\d+|US-\d+|AC-\d+\.\d+|NFR-\d+|SCR-\d+|C-\d+|T-\d{3}|ADR-\d{4}|A-\d+)\b/g;
+const ID_PATTERN = /(?<![\w-])(FEAT-\d+|US-\d+|AC-\d+\.\d+|NFR-\d+|SCR-\d+|C-\d+|T-\d{3}|ADR-\d{4}|A-\d+)\b/g;
 const CLARIFY = '[NEEDS CLARIFICATION';
 
 // ---------- files and state ----------
@@ -36,7 +44,12 @@ const exists = (root, rel) => fs.existsSync(abs(root, rel));
 const statePath = (root) => abs(root, `${STATE_DIR}/state.json`);
 
 function loadState(root) {
-  try { return JSON.parse(fs.readFileSync(statePath(root), 'utf8')); } catch { return null; }
+  try {
+    const state = JSON.parse(fs.readFileSync(statePath(root), 'utf8'));
+    // Projects created before Discovery existed: it counts as skipped once they are past it, pending otherwise.
+    if (!state.stages.D) state.stages.D = state.stages['0'].status === 'pending' ? { status: 'pending' } : { status: 'approved', skipped: true };
+    return state;
+  } catch { return null; }
 }
 
 function saveState(root, state) {
@@ -62,7 +75,7 @@ function fail(message, code = 1) {
 const requireState = (root) => loadState(root) || fail('Not an Itqan project. Run init.');
 
 function stageArg(arg) {
-  if (!STAGES[arg]) fail(`Stage must be 0-6, got "${arg}".`);
+  if (!STAGES[arg]) fail(`Stage must be D or 0-6, got "${arg}".`);
   return String(arg);
 }
 
@@ -332,6 +345,8 @@ function checkStage(root, n) {
   const model = specModel(root);
   const acIds = ids(model.acs);
 
+  if (n === 'D') errors.push(...checkDiscovery(read(root, doc) || ''));
+
   if (n === '0') {
     const c = read(root, doc) || '';
     for (const section of ['Quality bar', 'Constraints', 'Boundaries']) {
@@ -345,6 +360,7 @@ function checkStage(root, n) {
     for (const p of principles) if (!/Reason:/i.test(p)) errors.push(`Principle "${p.trim().slice(0, 50)}" has no "Reason:".`);
     const performance = (sectionBody(c, 'Quality bar').match(/^.*Performance.*$/im) || [''])[0];
     if (!/\d/.test(performance.replace(/<[^>]*>/g, ''))) errors.push('The quality bar has no Performance target with a number and unit (e.g. "p95 page load < 2 s").');
+    errors.push(...checkConstitutionQuality(c));
   }
 
   if (n === '1') {
@@ -492,6 +508,10 @@ function checkStage(root, n) {
       if (!screenData.some((line) => new RegExp(`^\\s*[-*|#]*\\s*\\**${id}\\b`).test(line))) errors.push(`${id} has no line of its own in "## Screen data" (one line per screen: every field and the operation that supplies it).`);
     }
     for (const id of acIds) if (!referenced.has(id)) warnings.push(`${id} is not referenced in the Technical Design (fine if it is purely client-side).`);
+    for (const section of ['Quality scenarios', 'Threat model']) {
+      if (!hasSection(design, section)) errors.push(`design.md is missing the "## ${section}" section.`);
+    }
+    errors.push(...checkDesignSecurity({ design, asvs: read(root, 'docs/03-tech/asvs-l1.md'), constitution: read(root, STAGES[0].doc) || '', asvsIds: asvsL1Ids() }));
   }
 
   if (n === '4') {
@@ -748,6 +768,14 @@ function renderCard(root, state, n) {
     const count = (v) => verdicts.filter((x) => x === v).length;
     out.push('## Results', '', `${count('PASS')} of ${verdicts.length} criteria PASS, ${count('FAIL')} FAIL, ${count('missing')} without a verdict.`, '');
   }
+  const round = latestRound(root, n);
+  if (round) {
+    out.push('## Scorecard', '', `Round ${round.round}: score ${round.stageScore ?? 'n/a'} (target ${SCORECARDS.stages[n].target}). Decision: ${round.decision}.`, '');
+    const bad = round.gates.filter((g) => !g.pass);
+    out.push(bad.length ? `Gates not passing: ${bad.map((g) => `${g.id}${g.measured ? '' : ' (not measured)'}${g.counted ? '' : ' (advisory)'}`).join(', ')}.` : 'All gates pass.', '');
+    const adv = round.metrics.filter((m) => !m.counted).map((m) => m.id);
+    if (adv.length) out.push(`Advisory (judge not calibrated or not measured): ${adv.join(', ')}.`, '');
+  }
   if (errors.length) out.push('## Check errors', '', ...errors.map((e) => `- ${e}`), '');
   return out.join('\n');
 }
@@ -799,6 +827,71 @@ function writeTargets(command) {
   return targets.filter((t) => t && !/^\/dev\/null$|^\$null$|^NUL$/i.test(t));
 }
 
+
+// ---------- scoring support ----------
+
+const asvsL1Ids = () => JSON.parse(fs.readFileSync(path.join(PLUGIN_ROOT, 'vendor', 'asvs', 'asvs-5.0.0-L1.ids.json'), 'utf8'));
+
+// The newest score round for a stage, or null.
+function latestRound(root, n) {
+  const files = listFiles(root, `${STATE_DIR}/scores/${n}`, (f) => /round-\d+\.json$/.test(f)).sort((a, b) => Number(a.match(/round-(\d+)/)[1]) - Number(b.match(/round-(\d+)/)[1]));
+  try { return files.length ? JSON.parse(read(root, files[files.length - 1])) : null; } catch { return null; }
+}
+
+// Gate ids the user has accepted by name as known gaps (assumption rows tagged known-gap that mention the id).
+function acceptedGaps(root) {
+  const text = read(root, `${STATE_DIR}/ASSUMPTIONS.md`) || '';
+  return new Set(text.split(/\r?\n/).filter((l) => /known-gap/i.test(l)).flatMap((l) => l.match(/\b[A-Z]-G\d+\b/g) || []));
+}
+
+const SCORECARDS = JSON.parse(fs.readFileSync(path.join(PLUGIN_ROOT, 'scorecards.json'), 'utf8'));
+const pluginVersion = () => { try { return JSON.parse(fs.readFileSync(path.join(PLUGIN_ROOT, '.claude-plugin', 'plugin.json'), 'utf8')).version; } catch { return 'unknown'; } };
+
+// Calibration records written by calibrate.mjs, one per rubric: rubrics/<R>.calibration.json.
+function loadCalibrations() {
+  const out = {};
+  const dir = path.join(PLUGIN_ROOT, 'rubrics');
+  if (!fs.existsSync(dir)) return out;
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.calibration.json'))) {
+    try { const c = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); out[c.rubric || f.split('.')[0]] = c; } catch { /* a broken record counts as no record */ }
+  }
+  return out;
+}
+
+// Hash of each rubric file, so a calibration made for an older rubric stops counting.
+function rubricHashes() {
+  const out = {};
+  const dir = path.join(PLUGIN_ROOT, 'rubrics');
+  if (!fs.existsSync(dir)) return out;
+  for (const f of fs.readdirSync(dir).filter((x) => /^R[\w-]+\.md$/.test(x))) {
+    out[f.replace(/\.md$/, '')] = createHash('sha256').update(fs.readFileSync(path.join(dir, f))).digest('hex').slice(0, 16);
+  }
+  return out;
+}
+
+// HEAD (then GET) every URL cited in a document; true when it answers with a status below 400.
+async function checkUrls(text) {
+  const urls = [...new Set([...text.matchAll(/https?:\/\/[^\s)>\]|]+/g)].map((m) => m[0].replace(/[.,;]+$/, '')))];
+  const results = {};
+  await Promise.all(urls.map(async (url) => {
+    for (const method of ['HEAD', 'GET']) {
+      try {
+        const res = await fetch(url, { method, redirect: 'follow', signal: AbortSignal.timeout(15000), headers: { 'user-agent': 'itqan-discovery-check' } });
+        if (res.status < 400) { results[url] = true; return; }
+      } catch { /* try the next method */ }
+    }
+    results[url] = false;
+  }));
+  return results;
+}
+
+// One line per round in .itqan/QUALITY.md (generated; the score files are the source).
+function appendQuality(root, r, card) {
+  const file = abs(root, `${STATE_DIR}/QUALITY.md`);
+  if (!fs.existsSync(file)) fs.writeFileSync(file, '# Quality history\n\n<!-- Generated by itq.mjs score. One line per round. -->\n\n| When | Stage | Round | Score | Target | Failed gates | Decision | Cost |\n|------|-------|-------|-------|--------|--------------|----------|------|\n');
+  fs.appendFileSync(file, `| ${r.at.slice(0, 16)} | ${r.stage} | ${r.round} | ${r.stageScore ?? 'n/a'} | ${card.target} | ${r.failedGates.join(' ') || 'none'} | ${r.decision} | ${r.cost_usd ?? ''} |\n`);
+}
+
 // ---------- commands ----------
 
 const commands = {
@@ -838,8 +931,8 @@ const commands = {
     const n = stageArg(arg);
     const blocker = firstUnapproved(state, prerequisites(n));
     if (blocker) fail(`Cannot start stage ${n}: stage ${blocker} (${STAGES[blocker].name}) is not approved.`);
-    if (n === '0' && state.inputs.length === 0) fail('Cannot start stage 0: no BRD or Vision Document recorded. Run intake first.');
-    if (n === '0' && new Set(state.inputs.map((i) => i.type)).size > 1 && !state.inputRuling) fail('Cannot start stage 0: a BRD and a Vision are recorded but no ruling. Run the ruling command.');
+    if (n === 'D' && state.inputs.length === 0) fail('Cannot start Discovery: no BRD or Vision Document recorded. Run intake first.');
+    if (n === 'D' && new Set(state.inputs.map((i) => i.type)).size > 1 && !state.inputRuling) fail('Cannot start Discovery: a BRD and a Vision are recorded but no ruling. Run the ruling command.');
     if (state.stages[n].status === 'approved') fail(`Stage ${n} is approved. Use reopen after the user agrees to an upstream change.`);
     state.stages[n].status = 'drafting';
     saveState(root, state);
@@ -867,6 +960,13 @@ const commands = {
     if (blocker) fail(`Cannot approve stage ${n}: stage ${blocker} (${STAGES[blocker].name}) is not approved.`);
     const { errors } = checkStage(root, n);
     if (errors.length) fail(`Cannot approve stage ${n}: the automated check found ${errors.length} error(s):\n- ${errors.join('\n- ')}`);
+    if (SCORECARDS.stages[n] && !['5', '6'].includes(n)) {
+      const round = latestRound(root, n);
+      if (!round) fail(`Cannot approve stage ${n}: no score yet. Run "itq.mjs score ${n}" and follow its decision.`);
+      const accepted = acceptedGaps(root);
+      const failing = round.gates.filter((g) => g.counted && g.measured && !g.pass && !accepted.has(g.id)).map((g) => g.id);
+      if (failing.length) fail(`Cannot approve stage ${n}: gate(s) ${failing.join(', ')} fail in the latest score round. Fix them, or the user accepts them by name (assumption row tagged known-gap).`);
+    }
     state.stages[n] = { status: 'approved', approvedAt: new Date().toISOString() };
     saveState(root, state);
     if (STAGES[n].doc) setFrontMatter(root, STAGES[n].doc, { status: 'approved', approved_at: today() });
@@ -882,7 +982,7 @@ const commands = {
     const n = stageArg(arg);
     state.stages[n].status = 'drafting';
     for (const k of STAGE_KEYS) {
-      if (Number(k) > Number(n) && state.stages[k].status === 'approved') {
+      if (pos(k) > pos(n) && state.stages[k].status === 'approved') {
         state.stages[k].status = 'recheck';
         if (STAGES[k].doc && exists(root, STAGES[k].doc)) setFrontMatter(root, STAGES[k].doc, { status: 'recheck' });
       }
@@ -903,6 +1003,75 @@ const commands = {
     for (const w of trace.warnings) console.log(`WARNING ${w}`);
     console.log(`Trace: ${trace.rows.length} acceptance criteria, ${trace.errors.length} error(s), ${trace.warnings.length} warning(s). Written to .itqan/TRACE.md.`);
     process.exit(trace.errors.length ? 1 : 0);
+  },
+
+
+  // score <n> [--online] [--values file.json] [--cost usd]: measure the stage against its scorecard
+  // (scorecards.json), write .itqan/scores/<n>/round-<k>.json and say what to do next.
+  async score(arg, ...flags) {
+    const root = projectDir();
+    requireState(root);
+    const n = stageArg(arg);
+    const card = SCORECARDS.stages[n];
+    const flag = (name) => { const i = flags.indexOf(name); return i < 0 ? undefined : flags[i + 1] ?? true; };
+    const { errors } = checkStage(root, n);
+    const ctx = { text: (rel) => read(root, rel), errors, today: new Date() };
+    if (flags.includes('--online')) ctx.urlResults = await checkUrls(read(root, STAGES[n].doc) || '');
+    const collected = collect(n, ctx);
+    const dir = `${STATE_DIR}/scores/${n}`;
+    const valuesFile = flag('--values') || (exists(root, `${dir}/values.json`) ? `${dir}/values.json` : null);
+    let supplied = {};
+    if (valuesFile) { try { supplied = JSON.parse(read(root, valuesFile) || fs.readFileSync(valuesFile, 'utf8')); } catch (e) { fail(`Cannot read values file ${valuesFile}: ${e.message}`); } }
+    const values = { ...collected.values, ...supplied };
+    const history = listFiles(root, dir, (f) => /round-\d+\.json$/.test(f)).sort().map((f) => JSON.parse(read(root, f)));
+    const result = evaluateStage(card, values, loadCalibrations(), rubricHashes());
+    const verdict = decide(card, result, history, { maxRounds: SCORECARDS.decision.maxRounds, minGain: SCORECARDS.decision.minGain });
+    const record = {
+      stage: n, round: verdict.round, at: new Date().toISOString(), itqan_version: pluginVersion(),
+      check_errors: errors.length, gates: result.gates, metrics: result.metrics, advisory: result.advisory, unmeasured: result.unmeasured,
+      failedGates: result.failedGates, stageScore: result.stageScore, decision: verdict.decision, focus: verdict.focus || [], reason: verdict.reason,
+      cost_usd: flag('--cost') ? Number(flag('--cost')) : null, notes: collected.notes,
+    };
+    fs.mkdirSync(abs(root, dir), { recursive: true });
+    fs.writeFileSync(abs(root, `${dir}/round-${verdict.round}.json`), JSON.stringify(record, null, 2) + '\n');
+    appendQuality(root, record, card);
+    console.log(`Stage ${n} (${STAGES[n].name}) round ${record.round}: score ${result.stageScore ?? 'n/a'} (target ${card.target}, floor ${card.floor}); ${result.failedGates.length} failed gate(s); decision: ${verdict.decision}.`);
+    for (const g of result.gates.filter((x) => !x.pass)) console.log(`  ${g.counted ? 'GATE' : 'gate (advisory)'} ${g.id} ${g.measured ? 'fails' : 'not measured'}: ${g.label}`);
+    for (const m of result.metrics) console.log(`  ${m.counted ? 'score' : 'advisory'} ${m.id} ${m.value ?? 'not measured'}${m.score === null ? '' : ' -> ' + m.score}: ${m.label}`);
+    for (const note of collected.notes) console.log(`  note: ${note}`);
+    console.log(`  ${verdict.reason}${verdict.focus ? ' Focus: ' + verdict.focus.join(', ') + '.' : ''}`);
+    process.exit(['fix-gates', 'revert', 'iterate'].includes(verdict.decision) ? 1 : 0);
+  },
+
+  // index <values.json>: roll the final measurements up into the Industry Standard and Sell Standard indices.
+  index(valuesFile) {
+    const root = projectDir();
+    requireState(root);
+    if (!valuesFile) fail('Usage: itq.mjs index <values.json> (ids from scorecards.json "indices").');
+    let values;
+    try { values = JSON.parse(fs.readFileSync(path.resolve(root, valuesFile), 'utf8')); } catch (e) { fail(`Cannot read ${valuesFile}: ${e.message}`); }
+    const gatesPass = values.gatesPass !== false;
+    const out = {};
+    for (const [name, idx] of Object.entries(SCORECARDS.indices)) {
+      const r = evaluateIndex(idx, values);
+      const lower = values[`${name}_lower`] ?? r.total;
+      out[name] = { ...r, band: band(idx, r.total, lower, gatesPass) };
+      console.log(`${name}: ${r.total ?? 'n/a'}${r.incomplete ? ' (incomplete: some groups have no measurements)' : ''} -> ${out[name].band}`);
+      for (const g of r.groups) console.log(`  ${g.id}: ${g.score === null ? 'n/a' : g.score.toFixed(1)} (weight ${g.weight})${g.missing.length ? ', missing ' + g.missing.join(', ') : ''}`);
+    }
+    fs.mkdirSync(abs(root, `${STATE_DIR}/scores`), { recursive: true });
+    fs.writeFileSync(abs(root, `${STATE_DIR}/scores/indices.json`), JSON.stringify({ at: new Date().toISOString(), gatesPass, ...out }, null, 2) + '\n');
+  },
+
+  // asvs-init: create docs/03-tech/asvs-l1.md with every OWASP ASVS 5.0 Level 1 row marked pending.
+  'asvs-init'() {
+    const root = projectDir();
+    requireState(root);
+    const dest = abs(root, 'docs/03-tech/asvs-l1.md');
+    if (fs.existsSync(dest)) fail('docs/03-tech/asvs-l1.md already exists.');
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    fs.writeFileSync(dest, asvsSkeleton(asvsL1Ids()));
+    console.log(`Created docs/03-tech/asvs-l1.md with ${asvsL1Ids().length} rows to decide.`);
   },
 
   status() {
@@ -959,4 +1128,4 @@ const commands = {
 
 const [cmd, ...args] = process.argv.slice(2);
 if (!commands[cmd]) fail(`Unknown command "${cmd}". Commands: ${Object.keys(commands).join(', ')}.`);
-commands[cmd](...args);
+await commands[cmd](...args);

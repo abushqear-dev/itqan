@@ -21,3 +21,11 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Templates in `${CLAUDE_PLUG
 - **Nothing speculative.** No "may later swap to X" justifications and no technology the requirements do not need.
 
 Gate: `itq.mjs check 3` passes (sections, pinned versions, OpenAPI with x-acceptance on every operation, data model, at least one ADR, every screen mapped), the review is clean, and the user approves the design and ADRs. The user reviews design.md and the ADRs, not the raw YAML.
+
+## Quality, security and diagrams (v0.6)
+- **Quality scenarios:** one line under "## Quality scenarios" for every `QAS-n` in the Constitution, with a Tactic and a Verify (tool and threshold).
+- **Threat model:** list the trust boundaries (browser to API, API to database, any third-party call), consider all six STRIDE categories for each (a `THR-n` or `n/a: <reason>`), then one table row per threat with a mitigation linked to an AC, a task or an ADR. Method adapted from STRIDE-GPT (MIT). Threats are specific to this product's data and roles, not generic lists.
+- **ASVS:** run `itq.mjs asvs-init`, then decide all 70 OWASP ASVS 5.0 Level 1 rows in `docs/03-tech/asvs-l1.md`: `applicable` with the AC, task, threat or ADR that meets it, or `N/A: <reason>`. The rows are vendored in `vendor/asvs/` (CC BY-SA 4.0).
+- **Diagrams:** a C4 context and a C4 container diagram in Mermaid (`C4Context`, `C4Container`), matching the components.
+- **Testing strategy** states every threshold from the scorecard (coverage, mutation, complexity, duplication, axe, Lighthouse, role-by-route matrix).
+- `itq.mjs check 3` fails on any QAS without a tactic, any boundary without all six categories, any threat without a linked mitigation, and any ASVS row left pending. `itq.mjs score 3` adds the judged threat-model (R5) and ADR (R6) quality, advisory until calibrated.

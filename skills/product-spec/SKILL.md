@@ -28,3 +28,8 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Template: `${CLAUDE_PLUGIN_
 - As short as the product allows. A short Vision gives a short spec.
 
 Gate: `itq.mjs check 1` passes (EARS form, examples, priorities and independent tests, measures, goals, a complete lifecycle table, no scope-cut accepted on a default, required sections, no clarification markers, no duplicate IDs), the review is clean, the review card (`itq.mjs card 1`) is shown, and the user approves. Approval freezes `docs/input/`.
+
+## Table stakes from Discovery (v0.6)
+- Read `docs/00-discovery.md`. Every table-stakes feature (MKT-FEAT-n) the user ruled `in scope` or `later` must appear in the spec: cite its id in the feature or story it becomes (`Source: ... MKT-FEAT-2`), as P1 for `in scope`, P2 or P3 for `later`. A feature ruled `dropped` needs no story.
+- Never turn a `dropped` ruling around, and never drop one that the user left as `in scope`.
+- `itq.mjs score 1` runs the requirement-smell linter (vague words, loopholes, open-ended terms, non-singular criteria, glossary drift), checks table-stakes coverage, and applies the scorecard. Fix smells at the source: replace "fast" with a number, split "X and Y" criteria, use glossary terms verbatim. Judge rubrics R2 (ISO 29148 characteristics) and R3 (INVEST) are advisory until calibrated.

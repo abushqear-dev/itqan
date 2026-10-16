@@ -1,0 +1,1 @@
+{"files":{"src/a.js":{"mutants":[{"status":"Killed"},{"status":"Timeout"},{"status":"Survived"},{"status":"NoCoverage"},{"status":"CompileError"},{"status":"Killed"}]}}}

@@ -1,0 +1,1 @@
+{"results":[{"check_id":"javascript.lang.security.audit.eval","path":"src/x.js","start":{"line":3},"extra":{"severity":"ERROR","message":"Detected eval\nmore"}},{"check_id":"style.x","path":"src/y.js","start":{"line":1},"extra":{"severity":"WARNING","message":"meh"}}],"errors":[{"type":"parse"}]}

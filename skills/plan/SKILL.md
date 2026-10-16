@@ -18,3 +18,6 @@ Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Template: `${CLAUDE_PLUGIN_
 - **A human view.** The review card (`itq.mjs card 4`) generates the one-screen task table for the user; keep the plan itself for the agent.
 
 Gate: `itq.mjs check 4` passes (every AC covered, fields present, verify commands well-formed and targeted, valid dependencies, no cycles, T-001 skeleton). Show the user the review card (`itq.mjs card 4`) with the task table; the user approves. This review should take minutes.
+
+## Security and quality coverage (v0.6)
+- Every applicable ASVS row, every `THR-n` mitigation and every QAS verify method needs a task that implements or verifies it (reference the id in the task's `Covers:` line). Group them with the story they belong to; add a final verification task for the QAS measurements (Lighthouse CI, role-by-route security matrix, reliability probes).

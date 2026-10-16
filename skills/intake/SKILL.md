@@ -28,4 +28,4 @@ Several overlapping drafts or a very long document: summarise and ask which vers
 1. Classify each file as `brd`, `vision` or neither. Report files that are neither and leave them out.
 2. Record each accepted file: `itq.mjs record-input docs/input/<file> <brd|vision> "<original path, url or 'pasted'>"`.
 3. With both a BRD and a Vision, compare scope, users, goals and constraints. If they conflict, ask which governs (or whether both are in scope), explaining the impact, and record it with `itq.mjs ruling "<text>"`; otherwise `itq.mjs ruling "no conflict"`. Never merge them silently.
-4. Summarise in two or three lines and hand back to `itqan:start` for stage 0.
+4. Summarise in two or three lines and hand back to `itqan:start` for stage D (Discovery).

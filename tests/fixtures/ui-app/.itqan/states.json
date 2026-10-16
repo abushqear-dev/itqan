@@ -1,0 +1,4 @@
+{
+  "SCR-01": { "route": "/shifts", "apiPattern": "**/api/shifts*", "expect": { "empty": "MSG.NO_SHIFTS", "error": "MSG.LOAD_FAILED", "loading": "skeleton|spinner|loading" } },
+  "SCR-02": { "route": "/bad" }
+}

@@ -23,3 +23,11 @@ Run `itq.mjs start 6`. Template: `${CLAUDE_PLUGIN_ROOT}/templates/acceptance.md`
 10. **No hidden problems.** List skipped, changed or flaky tests, and everything not verified.
 11. **Close the build.** `itq.mjs check 5` must pass. Ask the user to confirm the build is complete, then `itq.mjs approve 5`.
 12. Run `itq.mjs check 6`, fix the report until it passes, then ask the user to approve the Acceptance Report. On approval, `itq.mjs approve 6`.
+
+## Verification and the two indices (v0.6)
+Acceptance now also measures what the Constitution's QAS lines promise:
+- **Security:** a role-by-route probe spec generated from the Product Spec roles table (no session gives 401, a wrong role gives 403, no access to another user's records), headers and CSRF checks, the applicable ASVS rows each with a passing test, and ZAP baseline when Docker is available.
+- **Performance:** Lighthouse CI median of three runs, LCP at most 2.5 s, CLS at most 0.1, TBT at most 200 ms, and the API p95 at the NFR's load.
+- **Reliability and usability:** the explorer, acting as one persona per role, runs each P1 story three times (success checked in the data, steps against the shortest path, errors); restart, bad input and concurrent edits are probed.
+- **Competitor comparison:** pairwise judgement (rubric R7) of the key screens against three competitor screens from Discovery, both orders, advisory until calibrated.
+Write the measurements to a values file (ids in `scorecards.json` under `indices`) and run `itq.mjs index <values.json>`: it prints the Industry Standard Index, the Sell Standard Index and the band (ship-ready, strong prototype, not ready). Gates A-G1 to A-G6 decide whether any band can be reached. Report the indices and their gaps in the Acceptance Report.

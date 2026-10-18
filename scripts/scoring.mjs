@@ -90,7 +90,10 @@ export function decide(card, current, history = [], opts = {}) {
     return { decision: 'fix-gates', round, focus: current.failedGates, reason: 'Fix the failed gates first.' };
   }
   const score = current.stageScore;
-  if (score !== null && score >= card.target) return { decision: 'show-user', round, reason: `Score ${score} meets the target ${card.target}.` };
+  // No counted score metric could be measured (judges uncalibrated, tool results missing): nothing to iterate on.
+  // Looping would never change that, so hand the unmeasured list to the user instead.
+  if (score === null) return { decision: 'show-user', round, reason: `No counted score metric was measured (unmeasured: ${(current.unmeasured || []).join(', ') || 'judge metrics are advisory'}). All gates pass; show the user and say the score is not available.` };
+  if (score >= card.target) return { decision: 'show-user', round, reason: `Score ${score} meets the target ${card.target}.` };
   const gain = prev && prev.stageScore !== null && score !== null ? score - prev.stageScore : Infinity;
   if (round >= maxRounds || (round >= 2 && gain < minGain) || !budgetLeft) {
     return score !== null && score < card.floor

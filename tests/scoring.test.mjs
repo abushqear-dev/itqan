@@ -80,6 +80,8 @@ eq(d(res([], 78), [res([], 77)]).decision, 'show-user', 'small gain stops');
 eq(d(res([], 50), [res([], 49)]).decision, 'stop-ask', 'below floor stops and asks');
 eq(d(res([], 70), [res([], 60), res([], 66)]).decision, 'show-user', 'round limit shows the gaps');
 eq(d(res([], 70), [], { budgetLeft: false }).decision, 'show-user', 'budget exhausted shows the gaps');
+eq(d(res([], null)).decision, 'show-user', 'an unmeasurable score never loops');
+eq(d(res(['P-G1'], null)).decision, 'fix-gates', 'failed gates still come first when the score is unmeasurable');
 
 // Indices.
 const ISI = cards.indices.ISI;

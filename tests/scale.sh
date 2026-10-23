@@ -43,6 +43,7 @@ plan() { # plan <n>: T-001 skeleton and one task per story
 build() { # build <n stories> <review lines: none|task|batch>
   local n=$1 i
   mkdir -p app/tests; echo "# App" > app/README.md; echo "# Agent" > app/CLAUDE.md
+  echo 'const footer = "Prototype and Demo: not included - passwords, editing";' > app/server.js
   : > app/tests/a.test.js; for i in $(seq 1 "$n"); do echo "test('AC-0$i.1 does it', () => {});" >> app/tests/a.test.js; done
   git add -A >/dev/null; git commit -qm "T-001 skeleton"; local h; h=$(git rev-parse --short HEAD)
   printf '{"install":"node -e 0","test":"node -e \\"console.log(1)\\"","start":"node s.js","url":"http://localhost:1"}' > .itqan/commands.json
@@ -106,6 +107,10 @@ expect 1 "approving out of order is refused" $Q approve 4 1
 expect 0 "approve the bundle in order" $Q approve 1 4
 expect 0 "stage 5 starts" $Q start 5
 build 2 none
+mv app/server.js app/server.txt
+expect 1 "check 5 wants the app to show its scale" $Q check 5
+says "the missing scale note is named" "never says what it is"
+mv app/server.txt app/server.js
 expect 0 "check 5 needs no review lines at the prototype scale" $Q check 5
 $Q start 6 >/dev/null 2>&1
 report 2

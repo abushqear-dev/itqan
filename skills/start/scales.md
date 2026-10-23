@@ -53,7 +53,8 @@ Test-first for every task; commit per task; `.itqan/build-log.md` lines as in th
 - Reviews: Prototype none. Demo one independent review of the whole build at the end (`itqan:task-reviewer` over the full diff against the brief), logged as `BUILD reviewed COMPLIANT`. MVP per task, as in the build skill.
 - Implement in the main session; a subagent per task is optional.
 - Write `app/README.md` and `app/CLAUDE.md`; the README carries the "Scale" line.
-- UI: Prototype follows the brief's Look line. Demo and MVP follow the mockups and tokens (read the craft floor in `${CLAUDE_PLUGIN_ROOT}/vendor/impeccable/craft-floor.md`). A Demo starts with its seed data loaded.
+- UI: Prototype follows the brief's Look line. Demo and MVP follow the mockups and tokens (read the craft floor in `${CLAUDE_PLUGIN_ROOT}/vendor/impeccable/craft-floor.md`). A Demo starts with its seed data loaded, dated relative to today, and every screen's default view (default month, week, filter, selected item) must land on data, so no screen a viewer opens first is empty.
+- **Prototype and Demo show their scale inside the app:** a one-line note in the page footer or sign-in page, such as "Demo: sign-in is a name picker; no editing of shifts or notifications yet." `itq.mjs check 5` fails if the app's source never names its scale.
 
 ### 6 Acceptance
 Always: run the tests fresh, start the app, one line per criterion with evidence naming a real test, no hidden problems, the human summary line first, a "Scale" line, and a short "Try it" list (three to six steps that show the main path).
@@ -63,4 +64,4 @@ Always: run the tests fresh, start the app, one line per criterion with evidence
 - **Full:** the whole acceptance skill and the two indices.
 
 ## Honest labels
-A lite product is not a broken product. Say what the scale leaves out, and what a user must do to get it (`scale set <larger>`), in the brief, the README and the report. Never claim more than was verified.
+A lite product is not a broken product. Say what the scale leaves out, and what a user must do to get it (`scale set <larger>`), in the brief, the README and the report, and, at Prototype and Demo, inside the app itself (the pilots showed viewers never read the README). Never claim more than was verified.

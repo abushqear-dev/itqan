@@ -24,14 +24,16 @@ You approve every stage. Approval only works when the automated check for that s
 
 You pick how much of the pipeline a product gets, once, at the start (`itq.mjs scale list`). A bigger scale runs more stages and checks; a smaller one skips what the product does not need yet, says so in its documents, and can be raised later without losing finished work (`itq.mjs scale set <name>`).
 
-| Scale | For | Stages | Approvals | Target effort |
+| Scale | For | Stages | Approvals | Measured (food-bank scheduler) |
 |---|---|---|---|---|
-| **Prototype** | Test an idea or show one flow; local, one main path, throwaway data | brief and task list, build, report | 2 | ~30 min |
-| **Demo** | Show stakeholders or investors; looks real, seeded data, not for real users | brief, look (mockups), task list, build, report | 3 | ~1 h |
-| **MVP** | First real users; core flows correct and safe | constitution, spec, look, technical design, plan, build, report | 4 | ~2 h |
-| **Full product** | Ship and keep: researched, specified, measured | all stages, Discovery to Acceptance | 8 | ~3 h |
+| **Prototype** | Test an idea or show one flow; local, one main path, throwaway data | brief and task list, build, report | 2 | 10 min, $2 |
+| **Demo** | Show stakeholders or investors; looks real, seeded data, not for real users | brief, look (mockups), task list, build, report | 3 | 24 min, $5 |
+| **MVP** | First real users; core flows correct and safe | constitution, spec, look, technical design, plan, build, report | 4 | 1 h 56 min, $19 |
+| **Full product** | Ship and keep: researched, specified, measured | all stages, Discovery to Acceptance | 8 | $52-60 (v0.5-v0.6 pilots); time not re-measured |
 
-What stays at every scale: EARS criteria with examples, test-first building, criterion ids in test titles, tests that really run, one commit per task, and the gate hooks. What a scale drops is named in its brief, README and report, so a small product is never passed off as a bigger one. Stages that belong to one decision are approved together on one combined card, which is how a day can hold three or four products: start each in its own folder and session. The targets are planning figures for model time, re-measured by the pilots.
+What stays at every scale: EARS criteria with examples, test-first building, criterion ids in test titles, tests that really run, one commit per task, and the gate hooks. What a scale drops is named in its brief, README and report, so a small product is never passed off as a bigger one. Stages that belong to one decision are approved together on one combined card, which is how a day can hold three or four products: start each in its own folder and session. The measured column is one pilot per scale on the same Vision, in elapsed time; planning targets with margin are in `scales.json`.
+
+**A day with several products.** Each product is its own folder and session, so they run side by side and the limit is how many approvals you can give. One MVP (4 approvals), one Demo (3) and two Prototypes (2 each) is 11 approvals and roughly two hours of elapsed time if started together. The same day at the Full scale would be one product.
 
 ## Install (no cloning)
 

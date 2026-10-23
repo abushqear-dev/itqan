@@ -583,6 +583,11 @@ function checkStage(root, n) {
     if (review === 'batch' && !/^\s*[-*]?\s*BUILD\s+reviewed\s+COMPLIANT/im.test(read(root, `${STATE_DIR}/build-log.md`) || '')) {
       errors.push('The build log has no "BUILD reviewed COMPLIANT" line (one independent review of the whole build, required at this scale).');
     }
+    if (rules.scaleNote) {
+      const shown = listFiles(root, 'app', (f) => /\.(m?[jt]sx?|html?|ejs|hbs|pug)$/.test(f) && !TEST_FILE.test(f))
+        .some((f) => new RegExp(`\\b${profile.label}\\b`, 'i').test(read(root, f) || ''));
+      if (!shown) errors.push(`The app never says what it is. Show a one-line note naming the ${profile.label} scale in the page footer or sign-in page, e.g. "${profile.label}: <what it leaves out>".`);
+    }
     for (const t of tasks) {
       if (!t.log.verify) errors.push(`${t.id} has no "${t.id} verify: <command> -> <result>" line in .itqan/build-log.md.`);
       if (review === 'task' && !t.log.reviewed) errors.push(`${t.id} has no "${t.id} reviewed COMPLIANT" line in .itqan/build-log.md.`);

@@ -1,5 +1,5 @@
 {
-  "_comment": "Scale profiles. Chosen once per project (itq.mjs scale set <name>). stages: skip | lite | full per stage key. A skipped stage is stored as approved+skipped, so ordering and the hooks need no special case. rules relax checkStage; anything not listed stays strict (full has no relaxations). score: off | gates | full (off: approve needs only `check`; gates: approve needs a score round whose gates pass; full: gates plus weighted score and judges). bundles: stages the user approves together on one combined card. envelope: planning targets for one product (model minutes, USD, approvals asked of the user), re-measured by the pilots in pilot2/.",
+  "_comment": "Scale profiles. Chosen once per project (itq.mjs scale set <name>). stages: skip | lite | full per stage key. A skipped stage is stored as approved+skipped, so ordering and the hooks need no special case. rules relax checkStage; anything not listed stays strict (full has no relaxations). score: off | gates | full (off: approve needs only `check`; gates: approve needs a score round whose gates pass; full: gates plus weighted score and judges). bundles: stages the user approves together on one combined card. envelope: planning targets for one product (model minutes, USD, approvals asked of the user), set from the pilots in pilot2/ (food-bank Vision, itqan 0.7.0, wall-clock: prototype 10 min $1.98, demo 24 min $4.65, mvp 116 min $18.89) with about 1.5x margin; the full scale: cost from the v0.5-v0.6 pilots, minutes are a planning guess (those pilots timed rounds that waited on subagents too short). scaleNote: the built app must show its scale (a lite app is never mistaken for a finished product).",
   "version": 1,
   "default": "full",
   "order": [
@@ -56,7 +56,8 @@
           "splitWarn": false
         },
         "build": {
-          "review": "none"
+          "review": "none",
+          "scaleNote": true
         }
       },
       "includes": [
@@ -75,8 +76,8 @@
         "quality indices"
       ],
       "envelope": {
-        "minutes": 30,
-        "usd": 5,
+        "minutes": 15,
+        "usd": 3,
         "approvals": 2
       }
     },
@@ -138,7 +139,8 @@
           "splitWarn": false
         },
         "build": {
-          "review": "batch"
+          "review": "batch",
+          "scaleNote": true
         }
       },
       "includes": [
@@ -158,8 +160,8 @@
         "quality indices"
       ],
       "envelope": {
-        "minutes": 60,
-        "usd": 12,
+        "minutes": 35,
+        "usd": 8,
         "approvals": 3
       }
     },
@@ -238,7 +240,7 @@
       ],
       "envelope": {
         "minutes": 120,
-        "usd": 30,
+        "usd": 25,
         "approvals": 4
       }
     },

@@ -41,7 +41,7 @@ Itqan is MIT licensed. It includes or adapts material from these projects. Nothi
 
 ## Itqan's own work
 
-The product-completeness review pass, the lifecycle table, scope-cut tagging, review cards, the copy deck, the data-ranges table, the `explorer` agent and the build checks (tests run from `.itqan/commands.json`, criterion ids counted only in test titles, one commit per task) are written for Itqan and copy no external text.
+The scale profiles (`scales.json`: Prototype, Demo, MVP and Full product, the lite templates, bundled approvals), the product-completeness review pass, the lifecycle table, scope-cut tagging, review cards, the copy deck, the data-ranges table, the `explorer` agent and the build checks (tests run from `.itqan/commands.json`, criterion ids counted only in test titles, one commit per task) are written for Itqan and copy no external text.
 - **W3C Design Tokens Format Module 2025.10**: `templates/tokens.json` format.
 
 ## Added in v0.6

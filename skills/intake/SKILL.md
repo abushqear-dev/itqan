@@ -11,7 +11,7 @@ Goal: at least one BRD or Vision Document saved in `docs/input/`, classified and
 List `docs/input/` and read what is there.
 
 ## 2. Nothing usable? Ask
-Do not start any document and do not invent a product. Ask for a BRD (goals, stakeholders, scope, constraints), a Vision Document (who it is for, what it does, why it matters), or both. They can come as a file (a path, or dropped into `docs/input/`), a link, or pasted text. If the user only has an idea, offer to turn up to five answers into a minimal Vision Document (who it is for, the problem, the three things it must do, what is out of scope, hard constraints), and get approval of that text before recording it.
+Do not start any document and do not invent a product. Ask for a BRD (goals, stakeholders, scope, constraints), a Vision Document (who it is for, what it does, why it matters), or both. They can come as a file (a path, or dropped into `docs/input/`), a link, or pasted text. If the user only has an idea, offer to turn up to five answers into a minimal Vision Document (who it is for, the problem, the three things it must do, what is out of scope, hard constraints), and get approval of that text before recording it. At Prototype or Demo scale, write the idea exactly as given, plus any answers, to `docs/input/vision.md` without a separate approval: the brief is the approval.
 
 ## 3. Bring each input into `docs/input/`
 Never edit the user's original.
@@ -28,4 +28,5 @@ Several overlapping drafts or a very long document: summarise and ask which vers
 1. Classify each file as `brd`, `vision` or neither. Report files that are neither and leave them out.
 2. Record each accepted file: `itq.mjs record-input docs/input/<file> <brd|vision> "<original path, url or 'pasted'>"`.
 3. With both a BRD and a Vision, compare scope, users, goals and constraints. If they conflict, ask which governs (or whether both are in scope), explaining the impact, and record it with `itq.mjs ruling "<text>"`; otherwise `itq.mjs ruling "no conflict"`. Never merge them silently.
-4. Summarise in two or three lines and hand back to `itqan:start` for stage D (Discovery).
+4. **Choose the scale** (see [scales.md](../start/scales.md)): use the one the user named, otherwise ask the one question with your recommendation, then run `itq.mjs scale set <name>`. Ask it in the same message as any missing-input question when you can.
+5. Summarise in two or three lines and hand back to `itqan:start` for the first stage the scale runs.

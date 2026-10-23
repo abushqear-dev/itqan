@@ -10,8 +10,14 @@ depends_on: docs/04-plan.md
 
 > **Approve this if:** every criterion you care about is PASS with evidence, the known gaps are acceptable, and the app runs for you with the command below.
 
+## Scale
+<The scale this product was built at and what it does not include, e.g. "Demo. Not included: security and performance targets, per-task review, exploratory testing." Full product: "Full product.">
+
 ## How to run it
 <Exact commands, URL, sample accounts or seed data; the same as app/README.md.>
+
+## Try it
+<Lite scales: three to six numbered steps that show the main path, so a reader can see it working in two minutes.>
 
 ## Results by acceptance criterion
 <One line per AC, in order:>

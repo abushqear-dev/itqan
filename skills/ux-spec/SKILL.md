@@ -5,6 +5,8 @@ description: Stage 2 of Itqan. Produces the best UX and visual design the produc
 
 # Stage 2: UX Spec (UX and visual design)
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Templates: `${CLAUDE_PLUGIN_ROOT}/templates/ux-spec.md` and `${CLAUDE_PLUGIN_ROOT}/templates/tokens.json`. Inputs: the Product Spec and the Constitution. UX comes before the Technical Design so that screens decide what data the system must provide. The goal is the best outcome a strong product designer would deliver: usable, accessible and visually distinctive.
 
 ## 1. Research

@@ -5,6 +5,8 @@ description: Stage 6 of Itqan. Verifies the built product against every acceptan
 
 # Stage 6: Acceptance
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 Run `itq.mjs start 6`. Template: `${CLAUDE_PLUGIN_ROOT}/templates/acceptance.md`. Every claim follows `${CLAUDE_PLUGIN_ROOT}/vendor/superpowers/verification-before-completion.md`: run the command, read the output, then state the result with the evidence.
 
 1. **Run everything fresh:** install, build, the full test suite and the end-to-end tests, in the browsers the Constitution lists. Keep the outputs.

@@ -5,6 +5,8 @@ description: Stage 4 of Itqan. Writes the Implementation Plan (docs/04-plan.md),
 
 # Stage 4: Implementation Plan
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Template: `${CLAUDE_PLUGIN_ROOT}/templates/plan.md`. Inputs: the Technical Design (contracts, layout, run commands), the Product Spec criteria, the UX screens.
 
 - **T-001 is the walking skeleton:** scaffold `app/` per the repository layout, write `app/README.md` for humans from `${CLAUDE_PLUGIN_ROOT}/templates/app-README.md` (requirements, run, first account, tests) and `app/CLAUDE.md` for the agent from `${CLAUDE_PLUGIN_ROOT}/templates/app-CLAUDE.md` (commands, layout, conventions, boundaries from the Constitution), set up the test runner and the run command, one passing smoke test.

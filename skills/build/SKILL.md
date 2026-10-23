@@ -5,6 +5,8 @@ description: Stage 5 of Itqan. Builds the product in app/ task by task from the 
 
 # Stage 5: Build
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 Run `itq.mjs start 5` (skip if already drafting). The specs in `docs/` are read-only; `app/` is writable. Progress lives in `.itqan/build-log.md`.
 
 ## Resume first

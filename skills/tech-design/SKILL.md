@@ -5,6 +5,8 @@ description: Stage 3 of Itqan. Writes the Technical Design (docs/03-tech/), with
 
 # Stage 3: Technical Design
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Templates in `${CLAUDE_PLUGIN_ROOT}/templates/`: `design.md`, `api.yaml`, `adr.md`. Inputs: the UX Spec (screens, fields, actions), the Product Spec and the Constitution.
 
 - **Contracts are the source of truth for the build.** `api.yaml` defines every path, field, type, status code and error, with an example per operation and `x-acceptance: [AC-..]` on every operation. The data model (`data-model.sql`, `.prisma` or `.md` with exact columns and types) covers every entity. The build implements exactly these; anything missing here will be invented later, so leave nothing implicit.

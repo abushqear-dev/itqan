@@ -20,6 +20,19 @@ Itqan is a Claude Code plugin for spec-driven product building. It takes a produ
 
 You approve every stage. Approval only works when the automated check for that stage passes.
 
+## Choose a scale
+
+You pick how much of the pipeline a product gets, once, at the start (`itq.mjs scale list`). A bigger scale runs more stages and checks; a smaller one skips what the product does not need yet, says so in its documents, and can be raised later without losing finished work (`itq.mjs scale set <name>`).
+
+| Scale | For | Stages | Approvals | Target effort |
+|---|---|---|---|---|
+| **Prototype** | Test an idea or show one flow; local, one main path, throwaway data | brief and task list, build, report | 2 | ~30 min |
+| **Demo** | Show stakeholders or investors; looks real, seeded data, not for real users | brief, look (mockups), task list, build, report | 3 | ~1 h |
+| **MVP** | First real users; core flows correct and safe | constitution, spec, look, technical design, plan, build, report | 4 | ~2 h |
+| **Full product** | Ship and keep: researched, specified, measured | all stages, Discovery to Acceptance | 8 | ~3 h |
+
+What stays at every scale: EARS criteria with examples, test-first building, criterion ids in test titles, tests that really run, one commit per task, and the gate hooks. What a scale drops is named in its brief, README and report, so a small product is never passed off as a bigger one. Stages that belong to one decision are approved together on one combined card, which is how a day can hold three or four products: start each in its own folder and session. The targets are planning figures for model time, re-measured by the pilots.
+
 ## Install (no cloning)
 
 ```bash
@@ -34,7 +47,7 @@ Update: `claude plugin marketplace update itqan-plugins`, then `claude plugin up
 ## Use it
 
 1. Make an empty folder for the product (or put your BRD or Vision in it) and start Claude Code there.
-2. Run `/itqan:start`. If no input exists, it asks for one: a file, a link or pasted text.
+2. Run `/itqan:start` (add a scale word to skip the question: `/itqan:start demo`). If no input exists, it asks for one: a file, a link or pasted text. It also asks which scale you want.
 3. Answer its questions, read each stage's review card (reading time, the decisions only you can make, assumptions and what they mean for users, what changed), and reply `approve` or ask for changes.
 4. Run `/itqan:start` again in a later session to resume. `/itqan:status` shows where you are.
 

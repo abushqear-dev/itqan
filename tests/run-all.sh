@@ -8,4 +8,5 @@ for t in scoring lint-req calibrate fidelity health ui-states; do
   if node "$f" >/tmp/itq-$t.out 2>&1; then echo "ok   $t"; else echo "FAIL $t"; tail -8 /tmp/itq-$t.out | sed 's/^/     /'; fails=$((fails+1)); fi
 done
 bash tests/state-tool.sh >/tmp/itq-state.out 2>&1 && echo "ok   state-tool" || { echo "FAIL state-tool"; tail -12 /tmp/itq-state.out | sed 's/^/     /'; fails=$((fails+1)); }
+bash tests/scale.sh >/tmp/itq-scale.out 2>&1 && echo "ok   scale" || { echo "FAIL scale"; tail -12 /tmp/itq-scale.out | sed 's/^/     /'; fails=$((fails+1)); }
 exit $((fails>0))

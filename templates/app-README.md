@@ -2,6 +2,9 @@
 
 <One paragraph: what the app does and for whom.>
 
+## Scale
+<Built at the Prototype | Demo | MVP | Full product scale. Not included: <list>.>
+
 ## Requirements
 - <Runtime and version, e.g. Node 24 or newer>
 

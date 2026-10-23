@@ -5,6 +5,8 @@ description: Independent review of an Itqan document draft before the user sees 
 
 # Review a draft
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 1. **Automated check:** `node "${CLAUDE_PLUGIN_ROOT}/scripts/itq.mjs" check <n>`. Fix every error first.
 1b. **Score:** `itq.mjs score <n>` (add `--online` for Discovery). It writes the round file and prints a decision: `fix-gates`, `revert`, `iterate`, `show-user` or `stop-ask`. Follow it. Fix failed gates first, then the metrics it names under Focus. Never trade a gate for points.
 2. **Reviewer:** dispatch the `itqan:reviewer` agent in the foreground (`run_in_background: false`), so the report returns in this turn. Give it paths only, not your opinion: the draft, the stage brief, the stage's inputs, the Constitution, earlier approved documents, `.itqan/ASSUMPTIONS.md`. Ask it to flag only issues that affect correctness, completeness, testability or consistency with the inputs.

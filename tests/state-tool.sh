@@ -23,6 +23,8 @@ shell() { node -e 'process.stdout.write(JSON.stringify({cwd:process.argv[1],tool
 cd "$T"
 git init -q . && git config user.email t@t && git config user.name t && git config core.autocrlf false
 $Q init >/dev/null
+expect 1 "start refuses until a scale is chosen" $Q start D
+expect 0 "scale set full" $Q scale set full
 
 # ---------- discovery ----------
 expect 1 "Discovery refuses without input" $Q start D

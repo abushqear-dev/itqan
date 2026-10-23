@@ -5,6 +5,8 @@ description: Stage 1 of Itqan. Writes the Product Spec (docs/01-product-spec.md)
 
 # Stage 1: Product Spec
 
+> **Scale.** Run `itq.mjs scale show` first. If this stage is `skip`, there is nothing to do here. If it is `lite`, follow [scales.md](../start/scales.md) for this stage in place of the parts of this skill it overrides (lite template, one round, bundled approval). If it is `full`, follow this skill as written.
+
 Follow `${CLAUDE_PLUGIN_ROOT}/skills/start/loop.md`. Template: `${CLAUDE_PLUGIN_ROOT}/templates/product-spec.md`. Inputs: the recorded inputs (read them in full) and the Constitution.
 
 ## Order of work

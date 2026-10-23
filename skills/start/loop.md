@@ -1,5 +1,7 @@
 # The document stage loop (stages D and 0-4)
 
+At Prototype, Demo and MVP the loop is shorter: see [scales.md](scales.md) (lite templates, one round, no judges, stages of a bundle approved together). The steps below are the Full product.
+
 1. **Start.** Run `itq.mjs start <n>`. The hook blocks writes to a stage that is not started.
 2. **Load only what the stage needs.** Its direct input, the Constitution, and the IDs it must carry forward. Read earlier documents in full only when a question needs them.
 3. **Write the stage brief** from `${CLAUDE_PLUGIN_ROOT}/templates/stage-brief.md` (half a page) and show it.

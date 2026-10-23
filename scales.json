@@ -1,0 +1,307 @@
+{
+  "_comment": "Scale profiles. Chosen once per project (itq.mjs scale set <name>). stages: skip | lite | full per stage key. A skipped stage is stored as approved+skipped, so ordering and the hooks need no special case. rules relax checkStage; anything not listed stays strict (full has no relaxations). score: off | gates | full (off: approve needs only `check`; gates: approve needs a score round whose gates pass; full: gates plus weighted score and judges). bundles: stages the user approves together on one combined card. envelope: planning targets for one product (model minutes, USD, approvals asked of the user), re-measured by the pilots in pilot2/.",
+  "version": 1,
+  "default": "full",
+  "order": [
+    "prototype",
+    "demo",
+    "mvp",
+    "full"
+  ],
+  "profiles": {
+    "prototype": {
+      "label": "Prototype",
+      "for": "Test an idea or show one flow. Runs on your machine, one main path, throwaway data.",
+      "stages": {
+        "0": "skip",
+        "1": "lite",
+        "2": "skip",
+        "3": "skip",
+        "4": "lite",
+        "5": "lite",
+        "6": "lite",
+        "D": "skip"
+      },
+      "score": {
+        "1": "off",
+        "4": "off"
+      },
+      "bundles": [
+        [
+          "1",
+          "4"
+        ],
+        [
+          "5",
+          "6"
+        ]
+      ],
+      "rounds": 1,
+      "limits": {
+        "stories": 5,
+        "tasks": 8
+      },
+      "rules": {
+        "spec": {
+          "sections": [
+            "Stack",
+            "Later"
+          ],
+          "edgeCategories": [],
+          "lifecycle": "off",
+          "goals": false,
+          "scopeCuts": false
+        },
+        "plan": {
+          "splitWarn": false
+        },
+        "build": {
+          "review": "none"
+        }
+      },
+      "includes": [
+        "the main path of up to 5 stories, built test-first",
+        "a README that runs it",
+        "a one-page brief and task list you approve once"
+      ],
+      "excludes": [
+        "competitor research",
+        "a Constitution",
+        "visual design process and mockups",
+        "a separate technical design",
+        "security and performance targets",
+        "per-task independent review",
+        "exploratory testing",
+        "quality indices"
+      ],
+      "envelope": {
+        "minutes": 30,
+        "usd": 5,
+        "approvals": 2
+      }
+    },
+    "demo": {
+      "label": "Demo",
+      "for": "Show stakeholders or investors. Looks real, runs on seeded data, the main paths work; not meant for real users.",
+      "stages": {
+        "0": "skip",
+        "1": "lite",
+        "2": "lite",
+        "3": "skip",
+        "4": "lite",
+        "5": "lite",
+        "6": "lite",
+        "D": "skip"
+      },
+      "score": {
+        "1": "off",
+        "2": "off",
+        "4": "off"
+      },
+      "bundles": [
+        [
+          "1"
+        ],
+        [
+          "2",
+          "4"
+        ],
+        [
+          "5",
+          "6"
+        ]
+      ],
+      "rounds": 1,
+      "limits": {
+        "stories": 9,
+        "tasks": 14
+      },
+      "rules": {
+        "spec": {
+          "sections": [
+            "Roles and permissions",
+            "Stack",
+            "Seed data",
+            "Later"
+          ],
+          "edgeCategories": [],
+          "lifecycle": "off",
+          "goals": false,
+          "scopeCuts": false
+        },
+        "ux": {
+          "mockups": "base",
+          "dataRanges": false,
+          "copyDeck": false
+        },
+        "plan": {
+          "splitWarn": false
+        },
+        "build": {
+          "review": "batch"
+        }
+      },
+      "includes": [
+        "up to 9 stories",
+        "an art-directed look with mockups of the key screens, critiqued once",
+        "seeded realistic data",
+        "a UI scan for stray text and overflow"
+      ],
+      "excludes": [
+        "competitor research",
+        "a Constitution",
+        "a separate technical design",
+        "edge-case sweep and lifecycle table",
+        "security and performance targets",
+        "per-task independent review",
+        "exploratory testing",
+        "quality indices"
+      ],
+      "envelope": {
+        "minutes": 60,
+        "usd": 12,
+        "approvals": 3
+      }
+    },
+    "mvp": {
+      "label": "MVP",
+      "for": "First real users. The core flows are correct and safe to rely on; polish and breadth come later.",
+      "stages": {
+        "0": "lite",
+        "1": "full",
+        "2": "lite",
+        "3": "lite",
+        "4": "full",
+        "5": "lite",
+        "6": "lite",
+        "D": "skip"
+      },
+      "score": {
+        "0": "gates",
+        "1": "gates",
+        "2": "gates",
+        "3": "gates",
+        "4": "gates"
+      },
+      "bundles": [
+        [
+          "0",
+          "1"
+        ],
+        [
+          "2"
+        ],
+        [
+          "3",
+          "4"
+        ],
+        [
+          "5",
+          "6"
+        ]
+      ],
+      "rounds": 2,
+      "limits": {},
+      "rules": {
+        "constitution": {
+          "qas": false
+        },
+        "spec": {
+          "lifecycle": "warn"
+        },
+        "ux": {
+          "mockups": "base"
+        },
+        "tech": {
+          "quality": false,
+          "asvs": false
+        },
+        "plan": {
+          "splitWarn": false
+        },
+        "build": {
+          "review": "task"
+        }
+      },
+      "includes": [
+        "roles, edge cases and interpretations settled before building",
+        "base mockups with a copy deck and data ranges",
+        "an OpenAPI contract, data model and security basics",
+        "per-task review, tests that run, a UI scan, security probes and an exploratory test"
+      ],
+      "excludes": [
+        "competitor research",
+        "lifecycle completeness for every entity",
+        "ISO 25010 scenarios, STRIDE and the ASVS table",
+        "state and hover variants of every mockup",
+        "mutation testing, the worst-case data pass and the quality indices"
+      ],
+      "envelope": {
+        "minutes": 120,
+        "usd": 30,
+        "approvals": 4
+      }
+    },
+    "full": {
+      "label": "Full product",
+      "for": "A product you intend to ship and keep: researched, specified, measured.",
+      "stages": {
+        "0": "full",
+        "1": "full",
+        "2": "full",
+        "3": "full",
+        "4": "full",
+        "5": "full",
+        "6": "full",
+        "D": "full"
+      },
+      "score": {
+        "0": "full",
+        "1": "full",
+        "2": "full",
+        "3": "full",
+        "4": "full",
+        "D": "full"
+      },
+      "bundles": [
+        [
+          "D"
+        ],
+        [
+          "0"
+        ],
+        [
+          "1"
+        ],
+        [
+          "2"
+        ],
+        [
+          "3"
+        ],
+        [
+          "4"
+        ],
+        [
+          "5"
+        ],
+        [
+          "6"
+        ]
+      ],
+      "rounds": 3,
+      "limits": {},
+      "rules": {},
+      "includes": [
+        "everything in the pipeline",
+        "competitor research and the two quality indices"
+      ],
+      "excludes": [],
+      "envelope": {
+        "minutes": 180,
+        "usd": 60,
+        "approvals": 8
+      }
+    }
+  }
+}

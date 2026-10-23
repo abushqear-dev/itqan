@@ -6,7 +6,7 @@ A scale sets how much of the pipeline a product gets. The user chooses it once, 
 |---|---|---|---|---|
 | Prototype | Test an idea or show one flow. Local, one main path, throwaway data. | - - L - - L L L | 2: brief and plan, then build and report | about 30 min |
 | Demo | Show people. Looks real, seeded data, main paths work. Not for real users. | - - L L - L L L | 3: brief; look and plan; build and report | about 60 min |
-| MVP | First real users. Core flows correct and safe. | - L F L L F L L | 4: constitution and spec; look; design and plan; build and report | about 2 h |
+| MVP | First real users. Core flows correct and safe. At most 14 stories and 16 tasks. | - L F L L F L L | 4: constitution and spec; look; design and plan; build and report | about 2 h |
 | Full product | Ship and keep. Researched, specified, measured. | F F F F F F F F | 8, one per stage | about 3 h |
 
 (`-` skipped, `L` lite, `F` full. Times are model time for one product; the pilots in `pilot2/` re-measure them.)
@@ -41,7 +41,7 @@ Prototype and Demo skip it. MVP: lite, from `${CLAUDE_PLUGIN_ROOT}/templates/lit
 
 ### 1 Product Spec
 - **Prototype and Demo: the brief**, from `${CLAUDE_PLUGIN_ROOT}/templates/lite/brief.md`. It holds the summary, scale line, stack with pinned versions and run commands, the look, stories with EARS criteria and examples, and a "Later" list. Choose the smallest set of P1 stories that gives the main path from start to finish (Prototype at most 5, Demo at most 9); everything else becomes one line under "Later", never silently dropped. Decide the stack here because there is no technical design stage: the fewest parts that start with two commands, versions pinned. A Demo also names its seed data.
-- **MVP:** the normal Product Spec and skill. The lifecycle table is optional (a gap is only a warning); roles, interpretations, the edge-case sweep and the scope-cut rule all apply.
+- **MVP:** the normal Product Spec and skill, with a cap of 14 stories (and 16 tasks in the plan). Choose the stories that make the core flows correct and safe for first real users; every other good idea becomes one line under `## Later`, never silently dropped. The lifecycle table is optional (a gap is only a warning); roles, interpretations, the edge-case sweep and the scope-cut rule all apply. Cost follows how much is built: in the pilots 17 stories cost $18.89 and 22 stories more than $34.
 
 ### 2 UX Spec
 - **Prototype:** skipped. The brief's "Look" line is the whole design: tidy, readable type, one primary action per screen, works on a phone.

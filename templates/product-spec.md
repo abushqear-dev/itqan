@@ -89,6 +89,9 @@ THE SYSTEM SHALL <quality>.
 Measure: <number and unit>.
 Verify: <how: automated test, axe scan, load test>.
 
+## Later
+<Required at the MVP scale, optional elsewhere: stories worth having that the scale's story cap leaves out, one line each, no IDs, so nothing is dropped silently. The user can promote an item by raising the scale or asking.>
+
 ## Proposed additions
 <Every story or criterion with priority "proposed", one line each. "None" if none.>
 

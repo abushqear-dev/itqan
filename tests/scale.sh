@@ -37,7 +37,7 @@ plan() { # plan <n>: T-001 skeleton and one task per story
   local n=$1 i
   printf -- '---\nid: plan\n---\n# Plan\n### T-001 Walking skeleton\n- **Covers:** none\n- **Depends:** none\n- **Verify:** `npm test` -> 1 pass\n' > docs/04-plan.md
   for i in $(seq 1 "$n"); do
-    printf '### T-00%s Story %s\n- **Covers:** AC-0%s.1\n- **Depends:** T-001\n- **Test first:** AC-0%s.1 does it\n- **Verify:** `node --test --test-name-pattern="AC-0%s" tests/x.test.js` -> 1 pass\n' "$((i+1))" "$i" "$i" "$i" "$i" >> docs/04-plan.md
+    printf '### T-%03d Story %s\n- **Covers:** AC-%02d.1\n- **Depends:** T-001\n- **Test first:** AC-%02d.1 does it\n- **Verify:** `node --test --test-name-pattern="AC-%02d" tests/x.test.js` -> 1 pass\n' "$((i+1))" "$i" "$i" "$i" "$i" >> docs/04-plan.md
   done
 }
 build() { # build <n stories> <review lines: none|task|batch>
@@ -209,6 +209,31 @@ expect 1 "mvp approval needs a score round" $Q approve 0
 says "the score is demanded" "no score yet"
 expect 0 "score 0 gates only" $Q score 0
 expect 0 "approve the constitution" $Q approve 0
+cd /
+
+# ---------- mvp cap ----------
+mvpspec() { # mvpspec <stories> <with Later: yes|no>: a full-form spec for the MVP scale
+  local n=$1 i
+  printf -- '---\nid: product-spec\nversion: 1\nstatus: draft\n---\n# S\n## Goals and success measures\n- G-01: listing takes under 1 minute.\n## Clarifications\n- none\n## Roles and permissions\nx\n## Interpretations\n- none\n## Features\n### FEAT-01 Lend\n' > docs/01-product-spec.md
+  for i in $(seq 1 "$n"); do
+    printf '#### US-%02d Story %s\nPriority: P1. Source: vision.\nIndependent test: do it %s.\n##### AC-%02d.1 Does it\nWHEN the user acts, THE SYSTEM SHALL do thing %s.\nExample: a -> b\n' "$i" "$i" "$i" "$i" "$i" >> docs/01-product-spec.md
+  done
+  printf '## Edge cases\n- Dates and times: n/a\n- Quantities and text: n/a\n- Permissions: n/a\n- State changes: n/a\n- Multiple users: n/a\n- Notifications: n/a\n- Undo and recovery: n/a\n' >> docs/01-product-spec.md
+  [ "$2" = yes ] && printf '## Later\n- Notices when promoted from a waitlist\n' >> docs/01-product-spec.md
+  return 0
+}
+newproj mvp
+$Q start 0 >/dev/null 2>&1; mvpspec 15 yes
+expect 1 "mvp check 1 rejects more than 14 stories" $Q check 1
+says "the MVP cap is named" "allows 14 stories"
+mvpspec 14 no
+expect 1 "mvp check 1 needs a Later section" $Q check 1
+says "the missing Later section is named" 'missing the "## Later"'
+mvpspec 14 yes
+expect 0 "mvp check 1 passes with 14 stories and a Later section" $Q check 1
+plan 17
+expect 1 "mvp check 4 rejects more than 16 tasks" $Q check 4
+says "the MVP task cap is named" "allows 16 tasks"
 cd /
 
 # ---------- full keeps every rule ----------

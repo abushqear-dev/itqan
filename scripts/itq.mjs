@@ -59,7 +59,7 @@ function contextAdvice(root, state) {
   const tokens = currentContext(root);
   const limit = scaleOf(state) === SCALES.profiles.full ? FRESH_SESSION_TOKENS.full : FRESH_SESSION_TOKENS.lite;
   if (tokens === null || tokens < limit) return null;
-  return `Context is ${kTokens(tokens)} tokens and each further call re-reads it (about $${callCost(tokens).toFixed(2)} a call). Everything is saved in files: run /clear (or open a new session), then /itqan:start, to continue at a fraction of the usage.`;
+  return `Context is ${kTokens(tokens)} tokens and each further call re-reads it (about $${callCost(tokens).toFixed(2)} a call). Everything is saved in files, so you can run /clear (or open a new session) and /itqan:start if this session has become unwieldy; that is not shown to cost less.`;
 }
 
 // What a stage demands under a profile; two profiles with the same signature need no rework when moving between them.

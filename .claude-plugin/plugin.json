@@ -1,7 +1,7 @@
 {
   "name": "itqan",
   "displayName": "Itqan",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Spec-driven product building for Claude Code: Discovery (cited competitor research), Constitution with quality scenarios, Product Spec (EARS), UX Spec, Technical Design with contracts and ADRs, Implementation Plan, test-first build and an evidence-based Acceptance Report, with approval gates and generated traceability.",
   "author": { "name": "Mohammed Abu-Shqear" },
   "license": "MIT",

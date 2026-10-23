@@ -1,5 +1,5 @@
 {
-  "_comment": "Scale profiles. Chosen once per project (itq.mjs scale set <name>). stages: skip | lite | full per stage key. A skipped stage is stored as approved+skipped, so ordering and the hooks need no special case. rules relax checkStage; anything not listed stays strict (full has no relaxations). score: off | gates | full (off: approve needs only `check`; gates: approve needs a score round whose gates pass; full: gates plus weighted score and judges). bundles: stages the user approves together on one combined card. envelope: planning targets for one product (model minutes, USD, approvals asked of the user), set from the pilots in pilot2/ (food-bank Vision, itqan 0.7.0, wall-clock: prototype 10 min $1.98, demo 24 min $4.65, mvp 116 min $18.89) with about 1.5x margin; the full scale: cost from the v0.5-v0.6 pilots, minutes are a planning guess (those pilots timed rounds that waited on subagents too short). MVP cap: at most 14 stories and 16 tasks; the rest is listed under \"## Later\" (the pilots showed cost follows how much is built: 17 stories cost $18.89, 22 stories over $34). scaleNote: the built app must show its scale (a lite app is never mistaken for a finished product).",
+  "_comment": "Scale profiles. Chosen once per project (itq.mjs scale set <name>). stages: skip | lite | full per stage key. A skipped stage is stored as approved+skipped, so ordering and the hooks need no special case. rules relax checkStage; anything not listed stays strict (full has no relaxations). score: off | gates | full (off: approve needs only `check`; gates: approve needs a score round whose gates pass; full: gates plus weighted score and judges). bundles: stages the user approves together on one combined card. envelope: planning targets for one product (model minutes, USD, approvals asked of the user), set from the pilots in pilot2/ (food-bank Vision, itqan 0.7.0, wall-clock: prototype 10 min $1.98, demo 24 min $4.65, mvp 116 min $18.89) with about 1.5x margin; the full scale: cost from the v0.5-v0.6 pilots, minutes are a planning guess (those pilots timed rounds that waited on subagents too short). MVP cap: at most 14 stories and 16 tasks; the rest is listed under \"## Later\" (bounds scope and task count; the capped pilot cost $18.50 against $18.89 uncapped). scaleNote: the built app must show its scale (a lite app is never mistaken for a finished product).",
   "version": 1,
   "default": "full",
   "order": [
@@ -260,8 +260,8 @@
         "approvals": 4
       },
       "budget": {
-        "usd": 20,
-        "perTaskUsd": 1
+        "usd": 24,
+        "perTaskUsd": 1.3
       }
     },
     "full": {

@@ -24,6 +24,13 @@ A scale sets how much of the pipeline a product gets. The user chooses it once, 
 - **What the scale cuts is declared.** The brief, the app README and the Acceptance Report each carry a "Scale" line naming what is not included. Choosing the scale is the user's answer to every scope question it covers, so those cuts need no scope-cut row. Anything the scale does include follows the normal rules.
 - **Keep what keeps a small product honest:** EARS criteria with examples, test-first, criterion ids in test titles, tests that really run, one commit per task, the gate hooks.
 
+## Usage
+Usage is what limits how many products fit in a day. The scales are sized as a share of the plan's full allowance (`scales.json` `allowance`), never of what is left today, and each has a budget. Almost all of the cost of a long session is re-reading its own context on every call, so the way to stay cheap is to keep each session's context small, not to do less work.
+- **Fresh session after each approval bundle.** Everything is saved in files, so `/clear` (or a new session) and `/itqan:start` lose nothing. When `itq.mjs approve` prints a context note, pass it on to the user in your own words and continue only if they prefer to stay.
+- **Keep the main thread lean:** batch independent tool calls into one message; read a file once and use what you read; run the full test suite once per task, not after every edit; do not paste large outputs back into the conversation; never re-read documents already in context.
+- **Check the meter.** `itq.mjs usage` prints the live context size, the cost Claude Code has recorded for this folder and the scale's budget. At the plan stage the card shows a forecast of the whole product against the budget: if it is over, cut stories (move them to "Later") before building, or let the user accept the cost. At MVP, run `itq.mjs usage` after each task; if it exits 1 the budget is spent, so finish the current task, tell the user and let them decide.
+- The Full product has no budget; its stage-by-stage skills are unchanged.
+
 ## Stage by stage
 
 ### D Discovery
@@ -51,7 +58,7 @@ Normal template and the same verify rules. At Prototype and Demo a task may cove
 Test-first for every task; commit per task; `.itqan/build-log.md` lines as in the build skill. At lite scales:
 - No health gate (no mutation, coverage or complexity runs). Run the tests and the task's Verify command.
 - Reviews: Prototype none. Demo one independent review of the whole build at the end (`itqan:task-reviewer` over the full diff against the brief), logged as `BUILD reviewed COMPLIANT`. MVP per task, as in the build skill.
-- Implement in the main session; a subagent per task is optional.
+- Implementation: Prototype and Demo in the main session (their context stays small). **MVP: a fresh implementer subagent per task** ([implementer-prompt.md](../build/implementer-prompt.md)), so the main session only orchestrates. Do not read the code a subagent wrote; check its commit and its test output. In the MVP pilot the main session grew to 660k tokens and re-reading it was most of the cost.
 - Write `app/README.md` and `app/CLAUDE.md`; the README carries the "Scale" line.
 - UI: Prototype follows the brief's Look line. Demo and MVP follow the mockups and tokens (read the craft floor in `${CLAUDE_PLUGIN_ROOT}/vendor/impeccable/craft-floor.md`). A Demo starts with its seed data loaded, dated relative to today, and every screen's default view (default month, week, filter, selected item) must land on data, so no screen a viewer opens first is empty.
 - **Prototype and Demo show their scale inside the app:** a one-line note in the page footer or sign-in page, such as "Demo: sign-in is a name picker; no editing of shifts or notifications yet." `itq.mjs check 5` fails if the app's source never names its scale.

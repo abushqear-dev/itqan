@@ -10,6 +10,7 @@ import { checkDiscovery } from './discovery-check.mjs';
 import { collect } from './collectors.mjs';
 import { asvsSkeleton, checkConstitutionQuality, checkDesignSecurity } from './security-check.mjs';
 import { band, decide, evaluateIndex, evaluateStage } from './scoring.mjs';
+import { currentContext, recordedSpend } from './usage.mjs';
 
 const PLUGIN_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const STATE_DIR = '.itqan';
@@ -40,6 +41,27 @@ const SCALES = JSON.parse(fs.readFileSync(path.join(PLUGIN_ROOT, 'scales.json'),
 const scaleOf = (state) => SCALES.profiles[state?.scale] || SCALES.profiles[SCALES.default];
 const scaleRules = (state, group) => scaleOf(state).rules?.[group] || {};
 const RULE_GROUP = { 0: 'constitution', 1: 'spec', 2: 'ux', 3: 'tech', 4: 'plan', 5: 'build' };
+// Usage. Cache reads dominate the cost of a long session (every call re-reads the whole context), so the advice is
+// about context size. The price is fitted on claude-sonnet-5-5 from Claude Code's own cost records and is an estimate.
+const CACHE_READ_USD_PER_MTOK = 0.19;
+const FRESH_SESSION_TOKENS = { lite: 150000, full: 300000 };
+const kTokens = (n) => `${Math.round(n / 1000)}k`;
+const callCost = (tokens) => (tokens * CACHE_READ_USD_PER_MTOK) / 1e6;
+
+// A cost as a share of the FULL allowance of the plan (scales.json "allowance"), never of what is left today.
+function allowanceShare(usd) {
+  const a = SCALES.allowance;
+  return `about ${Math.round((100 * usd) / a.fiveHourUsd)}% of a 5-hour window and ${Math.round((100 * usd) / a.weeklyUsd)}% of a week on the ${a.plan} plan`;
+}
+
+// A hint to continue in a fresh session once the live context is large; null when it is not.
+function contextAdvice(root, state) {
+  const tokens = currentContext(root);
+  const limit = scaleOf(state) === SCALES.profiles.full ? FRESH_SESSION_TOKENS.full : FRESH_SESSION_TOKENS.lite;
+  if (tokens === null || tokens < limit) return null;
+  return `Context is ${kTokens(tokens)} tokens and each further call re-reads it (about $${callCost(tokens).toFixed(2)} a call). Everything is saved in files: run /clear (or open a new session), then /itqan:start, to continue at a fraction of the usage.`;
+}
+
 // What a stage demands under a profile; two profiles with the same signature need no rework when moving between them.
 const stageSignature = (profile, n) => JSON.stringify([profile.stages[n], profile.score?.[n] ?? null, profile.rules?.[RULE_GROUP[n]] ?? null, profile.limits]);
 
@@ -542,6 +564,10 @@ function checkStage(root, n) {
     const tasks = planTasks(root);
     if (tasks.length === 0) errors.push('The plan defines no tasks (headings with T-nnn).');
     const taskCap = profile.limits?.tasks;
+    const budget = profile.budget;
+    if (budget && tasks.length * budget.perTaskUsd > budget.usd) {
+      warnings.push(`Forecast: ${tasks.length} tasks at about $${budget.perTaskUsd} each is about $${(tasks.length * budget.perTaskUsd).toFixed(0)}, over the $${budget.usd} budget of the ${profile.label} scale. Move stories to "## Later" or accept the cost.`);
+    }
     if (taskCap && tasks.length > taskCap) errors.push(`The ${profile.label} scale allows ${taskCap} tasks; this has ${tasks.length}. Merge small tasks or move stories to "## Later".`);
     const taskIds = new Set(tasks.map((t) => t.id));
     for (const t of tasks) {
@@ -791,6 +817,12 @@ function renderCard(root, state, n) {
   }
 
   if (n === '4') {
+    const budget = scaleOf(state).budget;
+    if (budget) {
+      const tasks = planTasks(root).length;
+      const forecast = tasks * budget.perTaskUsd;
+      out.push(`Forecast: ${tasks} tasks at about $${budget.perTaskUsd} each is about $${forecast.toFixed(0)} for the whole product (${allowanceShare(forecast)}); budget $${budget.usd}.${forecast > budget.usd ? ' Over budget: cut stories (move them to Later) or accept the higher cost.' : ''}`, '');
+    }
     out.push('## Tasks', '', '| Task | Title | Covers | Depends |', '|------|-------|--------|---------|');
     for (const t of planTasks(root)) out.push(`| ${t.id} | ${t.title} | ${t.covers.join(', ') || 'none'} | ${t.depends.join(', ') || 'none'} |`);
     out.push('');
@@ -936,7 +968,7 @@ function appendQuality(root, r, card) {
 function renderScaleList() {
   const rows = SCALES.order.map((key) => {
     const p = SCALES.profiles[key];
-    return `| ${p.label} (\`${key}\`) | ${p.for} | about ${p.envelope.minutes} min, ${p.envelope.approvals} approvals | ${p.includes.join('; ')} | ${p.excludes.length ? p.excludes.join('; ') : 'nothing'} |`;
+    return `| ${p.label} (\`${key}\`) | ${p.for} | about ${p.envelope.minutes} min, ${p.envelope.approvals} approvals, ${p.budget ? `$${p.budget.usd} budget` : 'no usage cap'} | ${p.includes.join('; ')} | ${p.excludes.length ? p.excludes.join('; ') : 'nothing'} |`;
   });
   return ['| Scale | For | Effort | You get | Not included |', '|---|---|---|---|---|', ...rows].join('\n');
 }
@@ -951,7 +983,7 @@ function renderScaleShow(state) {
     `Stage modes: ${modes}`,
     `Approvals (bundles, in order): ${bundles}`,
     `Limits: ${Object.entries(p.limits || {}).map(([k, v]) => `${k} <= ${v}`).join(', ') || 'none'}. Review rounds per stage: ${p.rounds}.`,
-    `Planning envelope: about ${p.envelope.minutes} model minutes, about $${p.envelope.usd}.`,
+    `Planning envelope: about ${p.envelope.minutes} minutes elapsed. ${p.budget ? `Usage budget $${p.budget.usd} (${allowanceShare(p.budget.usd)}).` : 'No usage budget.'}`,
   ].join('\n');
 }
 
@@ -1007,6 +1039,8 @@ function approveStage(root, state, n) {
   saveSnapshot(root, n);
   writeTrace(root, buildTrace(root));
   console.log(`Stage ${n} (${STAGES[n].name}) approved. ${nextAction(state)}`);
+  const advice = contextAdvice(root, state);
+  if (advice) console.log(advice);
 }
 
 // ---------- commands ----------
@@ -1076,6 +1110,30 @@ const commands = {
     const state = requireState(root);
     if (stages.length === 0) fail('Usage: itq.mjs approve <stage> [<stage> ...]');
     for (const arg of stages) approveStage(root, state, stageArg(arg));
+  },
+
+  // usage: context size now, the cost Claude Code recorded for this folder, and the scale's budget.
+  usage() {
+    const root = projectDir();
+    const state = requireState(root);
+    const profile = scaleOf(state);
+    const tokens = currentContext(root);
+    const spend = recordedSpend(root);
+    const lines = [
+      tokens === null
+        ? 'Context now: unknown (no session transcript found for this folder).'
+        : `Context now: ${kTokens(tokens)} tokens; each call re-reads it, about $${callCost(tokens).toFixed(2)}.`,
+      spend.usd === null
+        ? 'Recorded spend: none yet. A headless run records it after every round; an interactive session records it when it ends or resumes (use /cost for the live figure).'
+        : `Recorded spend: $${spend.usd.toFixed(2)} in ${spend.sessions} session(s), ${allowanceShare(spend.usd)}.`,
+      profile.budget
+        ? `Budget for the ${profile.label} scale: $${profile.budget.usd} (${allowanceShare(profile.budget.usd)}).${spend.usd !== null && spend.usd >= profile.budget.usd ? ' Over budget: finish the current task, tell the user, and let them decide.' : ''}`
+        : 'The Full product scale has no usage budget.',
+    ];
+    const advice = contextAdvice(root, state);
+    if (advice) lines.push(advice);
+    console.log(lines.join('\n'));
+    process.exit(spend.usd !== null && profile.budget && spend.usd >= profile.budget.usd ? 1 : 0);
   },
 
   scale(action = 'show', name) {

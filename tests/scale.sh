@@ -120,6 +120,38 @@ expect 0 "the quality index is full-scale only" $Q index x.json
 says "index explains itself" "only at the Full product scale"
 cd /;
 
+# ---------- usage ----------
+fake_transcript() { # fake_transcript <usd> <context tokens>: a transcript like Claude Code writes, in a throwaway config dir
+  CFG="$(mktemp -d)"; export CLAUDE_CONFIG_DIR="$CFG"
+  local key; key="$(echo "$T" | sed 's/[^A-Za-z0-9]/-/g')"; mkdir -p "$CFG/projects/$key"
+  printf '{"type":"assistant","message":{"id":"m1","usage":{"input_tokens":2,"cache_read_input_tokens":%s,"cache_creation_input_tokens":10,"output_tokens":5}}}\n{"type":"cost-state","sessionId":"s1","totalCostUSD":%s}\n' "$2" "$1" > "$CFG/projects/$key/s1.jsonl"
+}
+newproj prototype
+CLAUDE_CONFIG_DIR="$(mktemp -d)"; export CLAUDE_CONFIG_DIR
+expect 0 "usage with no transcripts is unknown, not zero" $Q usage
+says "unknown spend is said so" "Recorded spend: none yet"
+fake_transcript 2.5 200000
+expect 0 "usage under budget exits 0" $Q usage
+says "usage shows the recorded spend as a share of the allowance" 'Recorded spend: $2.50'
+says "usage shows the live context" "Context now: 200k tokens"
+says "a large context gets the fresh-session advice" "run /clear"
+fake_transcript 3.5 50000
+expect 1 "usage over budget exits 1" $Q usage
+says "over budget is said" "Over budget"
+newproj full
+fake_transcript 40 200000
+expect 0 "the full scale has no usage budget" $Q usage
+says "full says so" "no usage budget"
+lacks "a 200k context is fine at the full scale" "run /clear"
+unset CLAUDE_CONFIG_DIR
+newproj prototype
+$Q start 1 >/dev/null; brief 5; plan 7
+expect 0 "an over-budget forecast is a warning, not an error" $Q check 4
+says "the forecast warning is shown" "Forecast: 8 tasks"
+expect 0 "card 4 shows the forecast" $Q card 4
+says "card 4 flags the budget" "Over budget"
+cd /
+
 # ---------- raising the scale ----------
 newproj prototype
 $Q start 1 >/dev/null; brief 2; plan 2; $Q approve 1 4 >/dev/null

@@ -77,8 +77,11 @@
       ],
       "envelope": {
         "minutes": 15,
-        "usd": 3,
         "approvals": 2
+      },
+      "budget": {
+        "usd": 3,
+        "perTaskUsd": 0.4
       }
     },
     "demo": {
@@ -161,8 +164,11 @@
       ],
       "envelope": {
         "minutes": 35,
-        "usd": 8,
         "approvals": 3
+      },
+      "budget": {
+        "usd": 7,
+        "perTaskUsd": 0.5
       }
     },
     "mvp": {
@@ -240,8 +246,11 @@
       ],
       "envelope": {
         "minutes": 120,
-        "usd": 25,
         "approvals": 4
+      },
+      "budget": {
+        "usd": 25,
+        "perTaskUsd": 1
       }
     },
     "full": {
@@ -301,9 +310,14 @@
       "excludes": [],
       "envelope": {
         "minutes": 180,
-        "usd": 60,
         "approvals": 8
       }
     }
+  },
+  "allowance": {
+    "plan": "Max",
+    "fiveHourUsd": 65,
+    "weeklyUsd": 230,
+    "note": "List-price dollars that equal 100% of the plan windows, estimated 2026-10-23 from Claude Code transcripts against the plan percentages (5-hour window about $55-75, week about $200-270). Used only to show a cost as a share of the FULL allowance. Edit for another plan."
   }
 }

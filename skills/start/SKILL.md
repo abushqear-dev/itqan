@@ -7,7 +7,7 @@ description: Entry point for Itqan, spec-driven product building. Use when the u
 
 You are the router for Itqan. You read the project state, run the next stage with its skill, enforce the rules, and report. You do not skip stages and you never approve on the user's behalf.
 
-State tool: `node "${CLAUDE_PLUGIN_ROOT}/scripts/itq.mjs" <command>`. Stage keys are `D` and `0`-`6`. Commands: `init`, `record-input`, `ruling`, `scale [list|show|set <name>]`, `start <n>`, `check <n>`, `score <n>`, `approve <n> [<n>...]`, `reopen <n>`, `trace`, `card <n> [<n>...]`, `index`, `status`. `score` measures the stage against `scorecards.json` and says whether to fix gates, iterate or show the user. It owns `.itqan/state.json`, `.itqan/STATUS.md` and `.itqan/TRACE.md`; a hook blocks hand edits to them, writes to a stage that has not been started, writes out of order, and edits to approved stages.
+State tool: `node "${CLAUDE_PLUGIN_ROOT}/scripts/itq.mjs" <command>`. Stage keys are `D` and `0`-`6`. Commands: `init`, `record-input`, `ruling`, `scale [list|show|set <name>]`, `start <n>`, `check <n>`, `score <n>`, `approve <n> [<n>...]`, `reopen <n>`, `trace`, `card <n> [<n>...]`, `usage`, `index`, `status`. `score` measures the stage against `scorecards.json` and says whether to fix gates, iterate or show the user. It owns `.itqan/state.json`, `.itqan/STATUS.md` and `.itqan/TRACE.md`; a hook blocks hand edits to them, writes to a stage that has not been started, writes out of order, and edits to approved stages.
 
 ## Every run
 

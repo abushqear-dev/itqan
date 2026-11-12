@@ -88,7 +88,7 @@ brief 6
 expect 1 "check 1 rejects more stories than the prototype allows" $Q check 1
 says "the cap message names the limit" "allows 5 stories"
 brief 2
-sed -i 's/^## Stack$/## Tools/' docs/01-product-spec.md
+perl -pi -e 's/^## Stack$/## Tools/' docs/01-product-spec.md
 expect 1 "check 1 needs a Stack section" $Q check 1
 says "missing Stack is reported" 'missing the "## Stack"'
 brief 2
@@ -189,11 +189,11 @@ Serves AC-01.1, AC-02.1, AC-03.1. Empty, Loading, Error, Success.
 EOF
 cp "$ROOT/templates/tokens.json" docs/02-ux/tokens.json; echo "<html></html>" > docs/02-ux/mockups/SCR-01.html
 RATIO=$(node -e "const l=h=>{const[r,g,b]=h.match(/../g).map(x=>{x=parseInt(x,16)/255;return x<=0.03928?x/12.92:((x+0.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};console.log(((l('F6F7F2')+.05)/(l('1B2620')+.05)).toFixed(1))")
-sed -i "s/= 14.0/= $RATIO/" docs/02-ux/ux-spec.md
+perl -pi -e "s/= 14.0/= $RATIO/" docs/02-ux/ux-spec.md
 expect 0 "demo check 2 needs no variants, data ranges or copy deck" $Q check 2
 expect 0 "approve UX and plan as one bundle" $Q approve 2 4
 $Q start 5 >/dev/null; build 3 batch
-sed -i '/BUILD reviewed/d' .itqan/build-log.md
+perl -ni -e 'print unless /BUILD reviewed/' .itqan/build-log.md
 expect 1 "demo check 5 wants one batch review line" $Q check 5
 says "the missing batch review is named" "BUILD reviewed COMPLIANT"
 echo "BUILD reviewed COMPLIANT" >> .itqan/build-log.md
@@ -234,6 +234,17 @@ expect 0 "mvp check 1 passes with 14 stories and a Later section" $Q check 1
 plan 17
 expect 1 "mvp check 4 rejects more than 16 tasks" $Q check 4
 says "the MVP task cap is named" "allows 16 tasks"
+cd /
+
+# ---------- a bundle is drafted together ----------
+newproj mvp
+$Q start 0 >/dev/null 2>&1
+expect 0 "stage 1 starts while stage 0 of its bundle is still drafting" $Q start 1
+expect 0 "the gate allows writing stage 1 while stage 0 of its bundle is drafting" gate docs/01-product-spec.md
+expect 1 "approving stage 1 still needs stage 0 approved first" $Q approve 1
+says "the refusal names stage 0" "stage 0"
+expect 1 "stage 2 is not in the bundle, so it still waits" $Q start 2
+expect 2 "the gate still blocks writing stage 2" gate docs/02-ux/ux-spec.md
 cd /
 
 # ---------- full keeps every rule ----------

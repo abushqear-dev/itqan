@@ -33,7 +33,7 @@ const pos = (k) => STAGE_KEYS.indexOf(k);
 // Acceptance is written while the build runs, so it needs stages 0-4, not 5.
 const prerequisites = (n) => (n === '6' ? ['D', '0', '1', '2', '3', '4'] : STAGE_KEYS.filter((k) => pos(k) < pos(n)));
 
-const ID_PATTERN = /(?<![\w-])(FEAT-\d+|US-\d+|AC-\d+\.\d+|NFR-\d+|SCR-\d+|C-\d+|T-\d{3}|ADR-\d{4}|A-\d+)\b/g;
+const ID_PATTERN = /(?<![\w-])(FEAT-\d+|US-\d+|AC-\d+\.\d+|NFR-\d+|SCR-\d+|C-\d+|T-\d{3}|ADR-\d{4}|A-\d+)\b(?!\[)/g;
 const CLARIFY = '[NEEDS CLARIFICATION';
 
 // Scale profiles (scales.json): which stages run, how deep, how many approvals. Old projects have no scale and count as full.
@@ -112,6 +112,12 @@ function stageArg(arg) {
 }
 
 const firstUnapproved = (state, keys) => keys.find((k) => state.stages[k].status !== 'approved');
+// The scale bundles stages the user approves together (MVP: 0+1 and 3+4), so the skills draft a whole bundle first.
+// An earlier stage of the same bundle that is still being drafted therefore does not block starting or writing a later
+// one; approving still needs the earlier stage approved first.
+const bundleOf = (state, n) => (scaleOf(state).bundles || []).find((b) => b.includes(n)) || [n];
+const draftBlocker = (state, n) =>
+  firstUnapproved(state, prerequisites(n).filter((k) => !(bundleOf(state, n).includes(k) && state.stages[k].status === 'drafting')));
 
 function nextAction(state) {
   if (state.scale === null) return 'Choose a scale first: itq.mjs scale list, then itq.mjs scale set prototype|demo|mvp|full.';
@@ -870,7 +876,7 @@ function writeBlock(root, state, target) {
   if (state.stages[n].skipped) {
     return `Itqan: stage ${n} (${STAGES[n].name}) is skipped at the ${scaleOf(state).label} scale, so ${rel} is not written. If the product needs it, tell the user and offer a larger scale (itq.mjs scale set <name>).`;
   }
-  const blocker = firstUnapproved(state, prerequisites(n));
+  const blocker = draftBlocker(state, n);
   if (blocker) return `Itqan: stage ${blocker} (${STAGES[blocker].name}) is not approved, so ${rel} (stage ${n}, ${STAGES[n].name}) cannot be written yet. The order is fixed.`;
   if (state.stages[n].status === 'approved') {
     return `Itqan: stage ${n} (${STAGES[n].name}) is approved, so ${rel} is locked. Stop, tell the user what you found, and ask whether to revise it (upstream-change skill).`;
@@ -1082,7 +1088,7 @@ const commands = {
     const n = stageArg(arg);
     if (state.scale === null) fail('Choose a scale first: itq.mjs scale list, then itq.mjs scale set prototype|demo|mvp|full.');
     if (state.stages[n].skipped) fail(`Stage ${n} (${STAGES[n].name}) is skipped at the ${scaleOf(state).label} scale.`);
-    const blocker = firstUnapproved(state, prerequisites(n));
+    const blocker = draftBlocker(state, n);
     if (blocker) fail(`Cannot start stage ${n}: stage ${blocker} (${STAGES[blocker].name}) is not approved.`);
     if (n === 'D' && state.inputs.length === 0) fail('Cannot start Discovery: no BRD or Vision Document recorded. Run intake first.');
     if (n === 'D' && new Set(state.inputs.map((i) => i.type)).size > 1 && !state.inputRuling) fail('Cannot start Discovery: a BRD and a Vision are recorded but no ruling. Run the ruling command.');

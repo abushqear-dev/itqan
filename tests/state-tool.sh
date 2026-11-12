@@ -18,6 +18,9 @@ expect() { # expect <exit code> <description> <command...>
 says() { # says <description> <pattern>: the last command's output matches
   if grep -q -- "$2" /tmp/itq-test.out; then echo "ok   $1"; else echo "FAIL $1 (no \"$2\" in output)"; sed 's/^/     /' /tmp/itq-test.out | head -12; fails=$((fails+1)); fi
 }
+lacks() { # lacks <description> <pattern>: the last command's output does not match
+  if grep -q -- "$2" /tmp/itq-test.out; then echo "FAIL $1 (found \"$2\")"; sed 's/^/     /' /tmp/itq-test.out | head -12; fails=$((fails+1)); else echo "ok   $1"; fi
+}
 gate() { echo "{\"cwd\":\"$T\",\"tool_input\":{\"file_path\":\"$T/$1\"}}" | $Q hook-gate; }
 shell() { node -e 'process.stdout.write(JSON.stringify({cwd:process.argv[1],tool_input:{command:process.argv[2]}}))' "$T" "$1" | $Q hook-bash; }
 cd "$T"
@@ -65,11 +68,11 @@ printf -- '---\nid: constitution\nversion: 1\nstatus: draft\n---\n# C\n## Princi
 expect 1 "check 0 needs 3 principles and a numeric performance target" $Q check 0
 says "check 0 names the principle count" "1 numbered MUST/SHOULD"
 says "check 0 names the performance target" "Performance target"
-sed -i 's/^1\. \*\*P1\*\* MUST x. Reason: y.$/1. **P1** MUST x. Reason: y.\n2. **P2** SHOULD z. Reason: w.\n3. **P3** MUST v. Reason: u./; s/Performance:\*\* fast/Performance:** p95 page load < 2 s/' docs/00-constitution.md
+perl -pi -e 's/^1\. \*\*P1\*\* MUST x. Reason: y.$/1. **P1** MUST x. Reason: y.\n2. **P2** SHOULD z. Reason: w.\n3. **P3** MUST v. Reason: u./; s/Performance:\*\* fast/Performance:** p95 page load < 2 s/' docs/00-constitution.md
 expect 1 "check 0 needs quality-attribute scenarios and standards" $Q check 0
 says "check 0 asks for QAS lines" "Quality-attribute scenarios"
 says "check 0 asks for the WCAG level" "WCAG level"
-sed -i 's/^- \*\*Performance:\*\* p95 page load < 2 s$/- **Performance:** p95 page load < 2 s\n- **Accessibility:** WCAG 2.2 AA\n- **Browsers \/ devices:** Chrome\n- **Security and privacy:** OWASP ASVS 5.0 Level 1/' docs/00-constitution.md
+perl -pi -e 's/^- \*\*Performance:\*\* p95 page load < 2 s$/- **Performance:** p95 page load < 2 s\n- **Accessibility:** WCAG 2.2 AA\n- **Browsers \/ devices:** Chrome\n- **Security and privacy:** OWASP ASVS 5.0 Level 1/' docs/00-constitution.md
 printf '\n## Quality-attribute scenarios\n- QAS-1 (Performance efficiency): Source: a user; Stimulus: opens the list; Response: it renders; Measure: LCP under 2.5 s\n' >> docs/00-constitution.md
 expect 0 "check 0 passes with scenarios" $Q check 0
 $Q score 0 >/dev/null 2>&1
@@ -136,8 +139,8 @@ says "check 1 rejects an empty lifecycle cell" "Lifecycle row \"Tool\" has an em
 says "check 1 rejects an unconfirmed out-of-scope action" "out of scope without the user's confirmation"
 says "check 1 rejects a scope-cut settled by default" "A-1 is a scope-cut"
 says "check 1 warns on criteria out of order" "not numbered 1, 2, 3"
-sed -i 's/^Priority: P1. Source: vision.$/Priority: P1. Source: vision.\nIndependent test: add a tool and see it listed./; s/| out of scope | |/| AC-02.1 | out of scope (confirmed by user) |/' docs/01-product-spec.md
-sed -i 's/| scope-cut | accepted |/| scope-cut | confirmed |/' .itqan/ASSUMPTIONS.md
+perl -pi -e 's/^Priority: P1. Source: vision.$/Priority: P1. Source: vision.\nIndependent test: add a tool and see it listed./; s/\| out of scope \| \|/| AC-02.1 | out of scope (confirmed by user) |/' docs/01-product-spec.md
+perl -pi -e 's/\| scope-cut \| accepted \|/| scope-cut | confirmed |/' .itqan/ASSUMPTIONS.md
 expect 0 "check 1 passes" $Q check 1
 expect 0 "card 1 renders" $Q card 1
 says "card shows the scope-cut" "A-1"
@@ -146,7 +149,7 @@ says "card shows reading time" "Reading time"
 $Q score 1 >/dev/null 2>&1
 expect 1 "approve refuses when a table-stakes feature is not cited in the spec" $Q approve 1
 says "approve names the table-stakes gate" "P-G5"
-sed -i 's/^### FEAT-01 Lend$/### FEAT-01 Lend (MKT-FEAT-1)/' docs/01-product-spec.md
+perl -pi -e 's/^### FEAT-01 Lend$/### FEAT-01 Lend (MKT-FEAT-1)/' docs/01-product-spec.md
 $Q score 1 >/dev/null 2>&1
 expect 0 "approve product spec" $Q approve 1
 expect 2 "inputs frozen after spec approval" gate docs/input/vision.md
@@ -191,7 +194,7 @@ says "check 2 needs data ranges" "Data ranges"
 says "check 2 needs a copy deck" "copy.md"
 grep -q "SCR-02 has no variant" /tmp/itq-test.out && { echo "FAIL a P2-only screen needs no mockup"; fails=$((fails+1)); } || echo "ok   a P2-only screen needs no mockup"
 RATIO=$(node -e "const l=h=>{const[r,g,b]=h.match(/../g).map(x=>{x=parseInt(x,16)/255;return x<=0.03928?x/12.92:((x+0.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};console.log(((l('F6F7F2')+.05)/(l('1B2620')+.05)).toFixed(1))")
-sed -i "s/^- Palette: .*/- Palette: Ground #F6F7F2, Ink #1B2620, Accent #0A7A5A, Error #B3261E\n- Type: Inter 16\/24, scale 1.2\n- Design critique: 4.4 \/ 5, PASS/; /#999999/d; s/= 9.0/= $RATIO/" docs/02-ux/ux-spec.md
+perl -ni -e "s/^- Palette: .*/- Palette: Ground #F6F7F2, Ink #1B2620, Accent #0A7A5A, Error #B3261E\n- Type: Inter 16\/24, scale 1.2\n- Design critique: 4.4 \/ 5, PASS/; next if /#999999/; s/= 9.0/= $RATIO/; print" docs/02-ux/ux-spec.md
 printf '## Data ranges\n| Value | Min | Max | Source | Handling at the extremes |\n|---|---|---|---|---|\n| Tool name | 1 | 80 chars | AC-01.2 | truncates with ellipsis |\n' >> docs/02-ux/ux-spec.md
 printf '# Copy\n## Errors\n- MSG.tool.nameRequired: Give the tool a name.\n' > docs/02-ux/copy.md
 echo "<html></html>" > docs/02-ux/mockups/SCR-01-empty.html
@@ -207,7 +210,7 @@ printf -- '---\nstatus: accepted\n---\n# ADR-0001 Node\n' > docs/03-tech/adr/000
 expect 1 "check 3 fails" $Q check 3
 says "check 3 catches a Constitution check FAIL" "Constitution check has a FAIL"
 says "check 3 needs one Screen data line per screen" "SCR-02 has no line of its own"
-sed -i 's/- P1: FAIL. not yet/- P1: PASS. server-side validation/; s/^SCR-01 and SCR-02: listTools$/SCR-01: name, owner <- listTools\nSCR-02: name <- listTools/' docs/03-tech/design.md
+perl -pi -e 's/- P1: FAIL. not yet/- P1: PASS. server-side validation/; s/^SCR-01 and SCR-02: listTools$/SCR-01: name, owner <- listTools\nSCR-02: name <- listTools/' docs/03-tech/design.md
 expect 1 "check 3 needs the quality scenarios, threat model and ASVS rows" $Q check 3
 says "check 3 asks for the QAS tactic" "QAS-1 has no line"
 says "check 3 asks for a trust boundary" "no trust boundaries"
@@ -215,7 +218,7 @@ says "check 3 asks for the ASVS file" "asvs-l1.md does not exist"
 expect 0 "asvs-init creates the Level 1 rows" $Q asvs-init
 expect 1 "check 3 refuses pending ASVS rows" $Q check 3
 says "check 3 names a pending row" "is still pending"
-sed -i 's/| pending |/| N\/A: not applicable to this small fixture |/' docs/03-tech/asvs-l1.md
+perl -pi -e 's/\| pending \|/| N\/A: not applicable to this small fixture |/' docs/03-tech/asvs-l1.md
 printf '\n## Quality scenarios\n- QAS-1: Tactic: pagination; Verify: Lighthouse at 500 rows\n\n## Threat model\nBoundaries:\n- TB-1 Browser to API: S: THR-1; T: n/a: no anonymous writes; R: n/a: no audit need; I: n/a: no secrets served; D: n/a: local single user; E: n/a: one role here\n\n| Threat | Boundary | Category | Description | Mitigation |\n|---|---|---|---|---|\n| THR-1 | TB-1 | S | anonymous call | AC-01.1 |\n' >> docs/03-tech/design.md
 expect 0 "check 3 passes with security sections" $Q check 3
 $Q score 3 >/dev/null 2>&1
@@ -270,6 +273,12 @@ id: plan
 - **Verify:** `node --test --test-name-pattern="AC-02.1" 'tests/**/*.test.js'` -> 1 pass
 EOF
 expect 0 "check 4 passes" $Q check 4
+# A regex character class in a Verify pattern (NFR-0[1345]) is not a reference to an undefined ID "NFR-0".
+cp docs/04-plan.md "$T/plan.bak"
+printf '\nThe NFR-0[1345] tests run as part of T-003.\n' >> docs/04-plan.md
+$Q trace >/tmp/itq-test.out 2>&1
+lacks "an ID followed by a regex class is not an undefined reference" "NFR-0, which is not defined"
+cp "$T/plan.bak" docs/04-plan.md
 expect 0 "card 4 renders" $Q card 4
 says "card 4 shows the task table" "| T-002 | List | AC-01.1, AC-01.2 | T-001 |"
 $Q score 4 >/dev/null 2>&1
@@ -314,7 +323,7 @@ expect 1 "check 6 fails" $Q check 6
 says "check 6 needs a known gap for FAIL" "AC-01.2 is FAIL without"
 says "check 6 rejects evidence naming a test that does not exist" "AC-01.1 PASS evidence names no existing test"
 says "check 6 needs a line per NFR" "NFR-01 has no PASS or FAIL"
-sed -i 's/FAIL. refuses wrongly/FAIL. Known gap: wording/; s/AC-01.1 shows the list/AC-01.1 lists/' docs/05-acceptance.md
+perl -pi -e 's/FAIL. refuses wrongly/FAIL. Known gap: wording/; s/AC-01.1 shows the list/AC-01.1 lists/' docs/05-acceptance.md
 echo '- NFR-01 PASS. Evidence: p95 0.4 s over 200 requests' >> docs/05-acceptance.md
 expect 0 "card 6 renders" $Q card 6
 says "card 6 counts the results" "2 of 3 criteria PASS, 1 FAIL"

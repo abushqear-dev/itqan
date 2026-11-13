@@ -230,7 +230,9 @@ function listFiles(root, rel, filter) {
 
 const TEST_FILE = /(\.test\.|\.spec\.|\/(tests?|e2e|__tests__)\/)/;
 const TEXT_FILE = /\.(m?[jt]sx?|cjs|py|rb|go|rs|java|kt|cs|php|swift|feature|md)$/;
-const testFiles = (root) => listFiles(root, 'app', (f) => TEST_FILE.test(f.split(path.sep).join('/')) && TEXT_FILE.test(f));
+// Tests live under app/ and, for products with a second client (an Android app in mobile/), under mobile/ as well.
+const TEST_DIRS = ['app', 'mobile'];
+const testFiles = (root) => TEST_DIRS.flatMap((dir) => listFiles(root, dir, (f) => TEST_FILE.test(f.split(path.sep).join('/')) && TEXT_FILE.test(f)));
 const stageFiles = (root, n) => STAGES[n].paths.flatMap((p) => (p.endsWith('/') ? listFiles(root, p.slice(0, -1)) : exists(root, p) ? [p] : []));
 const readAll = (root, files) => files.map((f) => read(root, f) || '').join('\n');
 const hasSection = (text, heading) => new RegExp(`^##\\s+${heading}`, 'mi').test(text || '');
